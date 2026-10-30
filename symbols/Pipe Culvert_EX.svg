@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 17.414 51.876">
+  <defs>
+    <style>
+      .cls-1{fill:none;stroke:#007ebf;stroke-width:2;stroke-miterlimit:10}
+    </style>
+  </defs>
+  <title>Asset 34</title>
+  <g id="Asset_34" data-name="Asset 34">
+    <path d="M8.667 16.414 L8.667 35.462" class="cls-1"/>
+    <path d="M1 8.707 C1 4.451 4.451 1 8.707 1 C12.963 1 16.414 4.451 16.414 8.707 C16.414 12.963 12.963 16.414 8.707 16.414 C4.451 16.414 1 12.963 1 8.707 Z" class="cls-1"/>
+    <path d="M1 43.169 C1 38.912 4.451 35.462 8.707 35.462 C12.963 35.462 16.414 38.912 16.414 43.169 C16.414 47.425 12.963 50.876 8.707 50.876 C4.451 50.876 1 47.425 1 43.169 Z" class="cls-1"/>
+  </g>
+</svg>

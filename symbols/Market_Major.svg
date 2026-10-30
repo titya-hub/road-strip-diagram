@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 53.988 42.67">
+  <defs>
+    <style>
+      .cls-1{fill:none;stroke:#000000;stroke-miterlimit:10}
+      .cls-2{fill:none;stroke:#000000;stroke-width:2;stroke-miterlimit:10}
+      .cls-3{fill:#1963af;stroke:#000000;stroke-width:2;stroke-miterlimit:10}
+      .cls-4{fill:#000000;stroke:#000000;stroke-miterlimit:10}
+    </style>
+  </defs>
+  <title>Asset 13</title>
+  <g id="Asset_13" data-name="Asset 13">
+    <path d="M2.776 3.966" class="cls-1"/>
+    <path d="M15.336 3.966" class="cls-1"/>
+    <path d="M0 0" class="cls-1"/>
+    <path d="M7.543 3.966 L15.336 3.966 L18.525 10.052 L28.293 28.689 L22.079 28.689 L22.079 34.771 L52.619 34.771" class="cls-2"/>
+    <path d="M52.619 10.052 L18.525 10.052 L28.293 28.689 L46.67 28.689 Z" class="cls-3"/>
+    <path d="M26.649 38.471 C26.649 36.427 28.306 34.771 30.349 34.771 C32.392 34.771 34.049 36.427 34.049 38.471 C34.049 40.514 32.392 42.17 30.349 42.17 C28.306 42.17 26.649 40.514 26.649 38.471 Z" class="cls-4"/>
+    <path d="M42.838 38.471 C42.838 36.427 44.494 34.771 46.537 34.771 C48.581 34.771 50.237 36.427 50.237 38.471 C50.237 40.514 48.581 42.17 46.537 42.17 C44.494 42.17 42.838 40.514 42.838 38.471 Z" class="cls-4"/>
+    <path d="M43.232 10.052 L43.232 28.689" class="cls-1"/>
+    <path d="M30.672 10.052 L30.672 28.689" class="cls-1"/>
+    <path d="M22.916 18.43 L50.237 18.43" class="cls-1"/>
+  </g>
+</svg>

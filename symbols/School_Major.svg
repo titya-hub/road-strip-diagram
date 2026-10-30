@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 40.118 51.309">
+  <defs>
+    <style>
+      .cls-1{fill:#000000;stroke:#000000;stroke-miterlimit:10}
+    </style>
+  </defs>
+  <title>Asset 5</title>
+  <g id="Asset_5" data-name="Asset 5">
+    <path d="M0.5 25.809 L25.5 25.809 L25.5 50.809 L0.5 50.809 Z" class="cls-1"/>
+    <path d="M13 25.809 L13 0.809 L38 13.309 L13 13.309" class="cls-1"/>
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/Road%20Strip%20Diagram%20Tool.html"
+    }
+  ]
+}

@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Road Strip Diagram Tool</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#111827;--mu:#6b7280;--ln:#d1d5db;--ac:#2563eb;--bl:#1d4ed8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111418;--card:#1b2027;--tx:#e5e7eb;--mu:#9ca3af;--ln:#374151;--ac:#60a5fa;--bl:#93c5fd}}
+:root[data-theme="dark"]{--bg:#111418;--card:#1b2027;--tx:#e5e7eb;--mu:#9ca3af;--ln:#374151;--ac:#60a5fa;--bl:#93c5fd}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.app{display:flex;gap:12px;padding:12px;align-items:flex-start}
+.panel{width:330px;flex:none;background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:12px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.view{flex:1;min-width:0;background:var(--card);border:1px solid var(--ln);border-radius:10px;overflow:auto;max-height:calc(100vh - 24px)}
+h1{font-size:16px;margin:0 0 8px}h2{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:14px 0 6px}
+h3{font-size:12px;font-weight:600;margin:10px 0 4px}
+label{display:block;font-size:12px;color:var(--mu);margin-top:6px}
+input,select,textarea,button{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--ln);border-radius:6px;padding:6px 8px}
+textarea{height:70px;font-size:12px}
+.r{display:flex;gap:6px}.r>*{flex:1}
+.r label{display:flex;align-items:center;gap:5px}
+input[type=checkbox]{width:auto;margin:0}
+button{cursor:pointer;background:var(--ac);color:#fff;border:0;margin-top:8px}
+button.s{background:var(--bg);color:var(--tx);border:1px solid var(--ln);margin-top:4px}
+#msg{color:#dc2626;font-size:12px;min-height:16px;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:3px 2px;border-bottom:1px solid var(--ln);text-align:left}th{position:sticky;top:0;background:var(--card);z-index:1}
+td.x{cursor:pointer;color:#dc2626;text-align:right;width:18px}
+.list{max-height:260px;overflow:auto}
+.fl{display:flex;min-width:min-content}.hd{position:sticky;left:0;flex:none;background:var(--card);z-index:2;border-right:1px solid var(--ln)}
+svg text{fill:var(--tx);font-family:inherit}
+.hide{display:none!important}
+.footer{text-align:right;color:var(--mu);font-size:12px;padding:4px 12px 12px}
+.hint{font-size:11px;color:var(--mu);margin:4px 0;white-space:pre-wrap;font-family:inherit}
+.point-label-option{display:flex;align-items:center;gap:6px;padding:2px 0}
+.point-label-option input{flex:none}
+.drag-label{cursor:move;touch-action:none;user-select:none}
+.legend-title{font-size:12px;font-weight:700}
+#printPages{display:none}
+@media(max-width:800px){.app{flex-direction:column}.panel{width:100%;position:static;max-height:none}.view{max-height:70vh;width:100%}}
+@page{size:A3 landscape;margin:10mm}
+@media print{
+ body{background:#fff;color:#111}
+ #printPages{--tx:#111}
+ .panel,.view,.footer{display:none!important}
+ .app{display:none}
+ #printPages{display:block}
+ .printPage{height:277mm;position:relative;page-break-after:always;break-after:page;overflow:hidden}
+ .printPage:last-child{page-break-after:auto;break-after:auto}
+ .printChart{display:flex;align-items:flex-start;width:100%;max-height:258mm;overflow:hidden}
+ .printChart svg{max-height:258mm;max-width:100%;height:auto;flex:none}
+ .printNumber{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:10pt}
+}
+</style></head><body>
+<div class="app">
+<div class="panel">
+<h1>Road Strip Diagram</h1>
+<h2>1. INPUT</h2>
+<label>Road Name/Number</label><input id="title" value="PR 2718">
+<label>Main category</label><select id="group"><option>Boundary</option><option>Existing</option><option>Design</option></select>
+<div id="categoryField"><label>Category</label><select id="cat"></select></div>
+<div id="customCategory" class="hide">
+ <label>New category name</label><input id="customName" placeholder="e.g. Drainage">
+ <label>Item type</label><select id="customMode"><option value="range">Range</option><option value="point">Point</option></select>
+ <button class="s" id="customAdd">Add category</button>
+</div>
+<div class="r"><div><label>Start station</label><input id="s" placeholder="12+500 or 12500"></div>
+<div id="eW"><label>End station</label><input id="e" placeholder="15+000"></div></div>
+<label id="vL">Value</label><select id="v"></select>
+<label id="vOtherLabel" class="hide">Custom value</label><input id="vOther" class="hide">
+<div id="landmarkFields" class="hide">
+ <label>Importance</label><div class="r"><label><input id="landmarkMajor" type="checkbox" checked> Major</label><label><input id="landmarkMinor" type="checkbox"> Minor</label></div>
+ <div id="landmarkCustom" class="hide">
+   <label>Landmark name</label><input id="landmarkName" placeholder="Other landmark">
+   <label>Optional symbol image (SVG, PNG, JPG)</label><input type="file" id="landmarkSymbol" accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg">
+  </div>
+ </div>
+ <div id="dimensionBox" class="hide"><label id="dimensionLabel">Dimension (optional)</label><input id="dimension" placeholder="e.g. 1.2 x 1.0 m"></div>
+ <div id="drainCustomBox" class="hide">
+  <label>Optional side drain symbol (SVG, PNG, JPG)</label><input type="file" id="drainSymbol" accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg">
+</div>
+<button id="add">Add to diagram</button><div id="msg"></div>
+<h3>Paste from Excel</h3>
+<label for="excelPaste">Copy the rows for one category from Excel and paste them here.</label>
+<textarea id="excelPaste"></textarea>
+<button class="s" id="imp">Add pasted rows</button>
+<h2>2. VIEW</h2>
+<label>Scale: <span id="sc"></span> m per pixel (smaller = zoom in, wider)</label>
+<input type="range" id="scale" min="2" max="200" value="40">
+<h3>Labels</h3>
+<div id="pointLabels"></div>
+<p class="hint">Drag diagram labels to reposition them.</p>
+<button class="s" id="rst">Reset sample</button>
+<h2>Items <span id="cnt"></span></h2>
+<div class="list"><table id="tb"></table></div>
+<button class="s" id="clr">Clear selected category</button>
+<h2>3. EXPORT</h2>
+<div class="r"><button class="s" id="pdf">PDF</button><button class="s" id="jpg">JPG</button></div>
+<p class="hint">PDF opens the print dialog (A3 landscape); choose Save as PDF.</p>
+</div>
+<div class="view" id="view"><div class="fl"><div class="hd" id="hd"></div><div id="bd"></div></div></div>
+</div>
+<div class="footer">By Mr.SOPHAL Ratitya</div>
+<div id="printPages"></div>
+<script>
+const $=i=>document.getElementById(i);
+const SYMBOL_GZIP={
+ 'Hospital_Major.svg':'H4sIAAAAAAAEAH2STU+DMBzG7/sU/9QzfeElrli26BJP86YXL4aMjjXrYKHNmDF+d0sHY+q0B/q0z/NrHqBiftxpOMjGqLrKEMMUgaxWdaGqMkMvz4/BFM1nE2EOJbhkZTK0sXafEtK2LW4jXDclCSmlxCXQKZIetaq214KMc068i+CgZPtQHzNEgUKc4MQ/0GwCIAq5Np1w0th3LU8aAK+0CdjHWmmd3lA/7oxt6q38sQx2yspGKzeljH5e4mGPr/0445IzzuSAt6qwm3T6z2mCnJsJMvQVVlm3d2+MtMAFOS07owRVZMgbbxxBkds8qPKd7PeAo/5997ndgIs+xRCG+DaBRQwsxBFPhmkwYlhEEWa0UzHDo9/pge10nxrCo+3l4hKLz6k+8opgpXPjfrv/9Ij8VXM5nvsNCX8jQ/3l2OIaIkjpLl53r2aTL+Ani86nAgAA',
+ 'Hospital_Minor.svg':'H4sIAAAAAAAEAH1SyW7CMBC98xUjc46XLCpJHVCL1BO9tZdeUERMsDAOii1CVfXf62wEVFof7Dd+i8bJ8MX5oOAkKiNLnSKGKQKhN2UudZGi97cXb4YW8wk3pwKcUpsU7aw9JoTUdY3rAJdVQXxKKXEK1EmSs5J6f0/I4jgmLYvgJEX9XJ5TRIFCGOGo3dB8AsBzsTUNcNDYTyU6DIA3ynjsayuVSnSpxaOxVbkXyZS2qy+9WuZ2l/hDeZBWVEq6I2H0+zrK76Km23Zd0kTMYiZu02b/pHFy6ZKToXdupXV3T8YIC4xy0tUNU4DMU9Qya+Y+eJ7ZzNPZQfSXTo765x8zuwMnfg3B9/FDBMsQmI+DOBqOgQhhGQSY0QaFDI98gwdvg3vVIB7pFi6vbeFF1Us+EGxUZtwUtH8Ckb/aXI25Nxb/t2VofzV2cc/CSeHmsBmz+eQHs8H74LYCAAA=',
+ 'School_Major.svg':'H4sIAAAAAAAEAG1RsW6DMBDd8xWn64x9DrUE1CRqh07t1i5dKgQOseJAhC2gqvrvNZCmUhQv9967p2f7Tm3Ho4Ved860TY6CEYJuyrYyTZ3j+9tzlOB2s1KuryE4G5fj3vtTxvkwDGyIWdvVfE1EPDhwsWSjNc3hllGkacrnLkJv9PDUjjkSENwTEyIBKVhMKW5WAKrSOzeBAJ3/snrBAKy0LhLfO2NtdkfzeXC+aw/6ikZH43VnTSiZoJ8lil+yFP+7QXnjg/bonPYgFV/o1KjBVDnOjU+JUBW+iJriqM8aSDy/8FT4PQTrKzEJa8kSSuEl1CsiaSH0jz8QSlu4MNf5X8ivE0V8yQjwHBAnIOJpVrO4wFtBitdhedNuNqtfGPLK2+sBAAA=',
+ 'School_Minor.svg':'H4sIAAAAAAAEAG1Ry07DMBC89ytW23P8Shva4LSCAye4wYULihonseomVWw1RYh/x3HSgkT34pmd0djrldvzwcBJdVa3TYacMATV7NpCN1WGb69P0Qq3m5m0pwq8s7EZ1s4dU0r7vid9TNquooIxRr0DR0t6NrrZ3zLy9XpNg4pw0qp/bM8ZMmCwEOQuTmApSMJXuJkByEKVdgAeWvdp1IgByM7YiH+V2ph0Xoa6t65r9yqds1ATjXpduDoVF3rQTnVG+yPl7HtMptdoSS8XSqed7z1YqxwIIenIB6UCXWQYlA8hEIrc5VGTH9TU9Hac3nzMXQ3e/MJBJMNU8CySv3DJR8gv6B1hZ3LrfzhMiPRfUkyW14RApoh4NeAF4b9CILcCJa38OodtbWY/obgoLP0BAAA=',
+ 'Pagoda_Major.svg':'H4sIAAAAAAAEAIVSPW+DMBDd8ytO7ox9JiUUConaSJ3SrV26VCg4xIoDEbZCqqr/vTbQkKBI9XLv3r37lJPFaa/gKGotqzIlnCIBUa6rXJZFSt7fXrwHsphPEn0swCpLnZKtMYeYsaZpaDOlVV0wHxGZVZBOEp+ULHe3hDyKItZGCRylaJ6rU0oQEPwZBJz6GJL5BCDJxUY7YKE2X0p0GICulfb490YqFd9h+x61qaudGLneXhpRK2lNzPGnK8XOtRL21yEx0ljuSWthIExY57pAATJPSRv4DAnkmcm8MtuLnoNuVCs8ZGYLVvqKNAA/oCGGsLJ25ATYOTjgDwJrlWl703YvwsYV+RR4RO+DEJYOzihiAA5N3a0u0PKaHIRDtu/TCCNH9mMNaHlNnoV99r9jupX67iubhhdbd/StAgkr7L9y32Y++QWMn+/IhgIAAA==',
+ 'Pagoda_Minor.svg':'H4sIAAAAAAAEAJVTy27CMBC88xUrc45fhJCkDqhF6qm9tZdeqoiYYGESFFuEquq/N09EaHrAl93xzI5217JYnQ8aTrIwKs8ixDBFILNNnqgsjdD727Pjo9VyIswphUqZmQjtrD2GhJRlicsZzouUcEopqRSolYRnrbL9mJAFQUAaFsFJyfIpP0eIAgUeYJ/7MOfYZS5aTgBEIremTqrU2C8t2xwAb7Rx2PdWaR1Ot815MLbI9zKc0uZ00ClVYnch7+FBWVloVYWQ0Z9rN965DcrvdxPk0qggffvCKlvdPRojLfiCtLAmUlBJhBri00eQxDZ2svgguzvwUTf+MbY7qKSvzXaAe0144YsxOGcdvEYfCDY6NtXjNctD5NaZuTiovShmngvrDjIPLxiHHs3aMEDrcXJQeOPKZ9hj3oVs2x+i9Tg5LGxdh6Pxv6N1e2kbvEvcL7FH/XD/r1SQtPor9VdYTn4BLSwzhloDAAA=',
+ 'Market_Major.svg':'H4sIAAAAAAAEAKVUTY+bMBC951eMvOcYf2E+SrJqI/WU3trLXioUSIKWwCpYIVXV/94Jttlls2oilQt+zLznN+Mx2eP5UMOpPHZV2ywIp4xA2Wzaomp2C/Lj+9d5TB6Xs6w77QAzm25B9sa8pEHQ9z3tJW2Pu0AwxgLMIDYlPddV8/xRIk+SJBiiBE5V2X9pzwvCgEEoaRLHoATVEVnOALKi3HaXBS4786su7RqAbupuzn9vq7pOm7YpP3Xm2D6X6QMbHgfnh8qUx7rCV8rZn7dccZPbV4XZp+K2lLRSDzzRMt/+r5pyahP6HXVlwdigLPBty0xl8NvnrisNcJkFFl8iO6iKBRkiP7kkUOQmnzf5oXQfMZ24zr/kZg+Y/E3QKNKAh6Q1gU2ddzgHw0GQ4H0qD6mUd+bi0d9KiWiopFWD9VttRDENRQicURYKWIuYikQCvnScIBSURcl7KBVWwmEd4qRxDycexLUHl+w3+ve+SuMMe/Q0kZbX0gKzFfqIqUJbKw81VWIQkUx7z5JRqcYKVlJQmYgxqCh7JXrkVB1UjIZcgSPiXeORF7Vg5Ta0yHlxrKnRaV3qui6UiGU8OvDQ2lOKqkR569iwUEZjXQq7G3MPQ0bFJWiJHjlVB51DR7Tmnairy23oQtaLZ02M3q5L4pZiPHsH7WnfGmXstY5euQ7ex8XxTbgGHD28DWtX+IA+YmbBDv/Zl1/ycvYXLEm7gOIFAAA=',
+ 'Market_Minor.svg':'H4sIAAAAAAACCpVUwY6bMBC95ytG7jmDPTbGUMiqjdQTvbWXXqoosAQtgVVAIVXVf6+C7WSpNt0sF+Yxfm/eM5bTh9O+gWN56OuuzZhAzqBst11Rt1XGvn/7sjTsYbVI+2MFp33T9hnbDcNzEgTjOOIosTtUAXHOg/5YMbskOTV1+/TaQhHHcTB1GRzrcvzcnTLGgUMoMTYGFKGO2GoBkBblY38uANJ++NWUtgbAbdMvxe/HummStmvLj/1w6J7K5AOfHgeX+3ooD029r4dE8D8vufQmd6yLYZfQ21LSSs3pdzhJg0ukNPBB06EemnL1qe/LAQSlgcXnTgV1kbGp81MQg2IzbJbtZl+6jyCIub2q/D5dq3kNkD5vhh0UGftKGEUaJMZaM9g2m77P2LS9LHidIEKU8l0MDvy+hRGGSlplyF/OgVwYDCkEwZGHBDkZpFgCGdQmhpwIeRT/C6XCKBKQh4RaeDhzQrecOIof9//pSqOOPPpx3wDSqFUM0qCKBKw91KhokpJce/+So1SXNGtJKGO6NBXyK9Ejp+qg4hgKBY6oCEXkRS1Yu4EWOS+ONTc6TydvpVOERpqLDw+tSaVQxcoHUBpDGV3SKYOhER6GHOnctESPnKqDzqcj2ghO1KVzA13LevGsmdF700kkSZfT4KD9//cddMlRR1cFB9+jQISx0CAMKgm524oJ3eanwfVm8KUrpld6vr9Xi78nEZEQDwYAAA==',
+ 'Bridge_EX.svg':'H4sIAAAAAAACCnWRPW+DMBCGd37F6TqDbRySQG2idujUbu1cUXCIFWMibAFV1f9e8ZEMVbvdc+/pubMsDmNjoFed062VyCKKoGzZVtrWEt9en8I9HvJAuL6GsTHWSTx5f8kIGYYhGnjUdjWJKaXE9TUuI9lotD3/NcjSNCVzitBrNTy2o0QKFBIKSYx5ACAqdXRTASCc/zRqqQGi0riQfR21MZltrbp3vmvPKruLi/gjLlcMB135UxZfsdFedUY32meMfi9acvMKct0mvPZG5Q/OKQ+cCrLwlNSgK4lz8s4pQlX4IrRFo9YmcIrrwZfCn6CS+MKAwTOLo+12B4xHyQ34fgZIGEJpCuckzu9C8luxSScH30Wc89WxwuLYpP9IBKnzQEz/kQc/PjhTxt8BAAA=',
+ 'Bridge_DS.svg':'H4sIAAAAAAACCnWRPW+DMBCGd37F6TrjDwhJTG2idujUbu1coeAQK8ZE2AKqqv+9ApIMVbPdc+/pubMsd2NjodedN61TyAlD0G7fVsbVCj/eX+It7opI+r6GsbHOKzyGcM4pHYaBDClpu5omjDHq+xqXkXy0xp3+G+RCCDqnCL3Rw3M7KmTAIGOQJVhEALLSBz8VANKHL6uXGoDsrY/598FYm7vW6Ucfuvak8wctuOBXjAdThWOeXLExQXfWNCbknP0sWnrzSnrdJoMJVhdP3usAiaQLTkENplI4B58JQlWGMnZloy89WM4GkOcyHKFS+MaBwytPyHq9AZ6S7AbpdgbIOMLelt4rnB+F9K9iJSZHuiFpml4cF1gcK3FHImldRHL6jCL6BW9wcRncAQAA',
+ 'Box Culvert_EX.svg':'H4sIAAAAAAAEAI1SPW/DIBDd8ytOdDYftnFsFydqh07t1i5dKismDgrBkUFxqqr/vfgjUQdLCQPcu3t39w4Q6/NBw0m2VjWmQAxTBNJsmkqZukAf7y9BitarhbCnGjzT2ALtnDvmhHRdh7sIN21NQkop8Qw0UvKzVmY/R2RZlpEhiuCkZPfcnAtEgULMcJrEwGNMeYpWCwBRya3tDW9a963laAPgjbYB+9kqrXPTGPloXdvsZf4QDWuCQacqt8vDCzwoJ1ut/JEz+juWJde6gly6Caec9z1ZKx2wTJAR95EaVFWgIfLFMgRV6crAlAc5OT0dTYLri1hxLN0OfNpbisNlBuP+GkUzKOZ42cP0P/pEsNGl9dc+jI3IjcoM2O2MmOIw5sCj/rZ9/xBnSTJ1vCu7fys2COcpH1vfozPh7Dolw9EynCTM5wpSj2/jD9F/r9XiD41dW/CuAgAA',
+ 'Box Culvert_DS.svg':'H4sIAAAAAAAEAI1SO0/DMBDe+ytOZo4fcd44rWBggg0WFhQ1bmrVdarYaooQ/x3n0YqhUrv47rvnd3cWq9New1F2VrWmRAxTBNKs21qZpkQf7y9BhlbLhbDHBnyksSXaOncoCOn7Hvcct11DQkop8RFoCilOWpndtUCW5zkZvQiOSvbP7alEFChEDGdJBHGEaZyh5QJA1HJjB8Wr1n1rOekAeK1twH42SuvCtEY+Wte1O1k81DVnYTrDoFe12xbhGe6Vk51WXhSM/k5lyaWuIOduwinnbU/WSgdckAkOjgZUXaLR8cUR1JWrAlPt5WwDjma2zZmpOFRuCz7pLcNhmsP0vnJ+BUUxTgeY/UefCNa6sn7n48yI3KjMgN3OiCgOoxhiPqza9w9xniRzx7uyh0OxkXicxVPre3gmMbtMyTBPw5nC9VxBmukwXojhby0Xf56uM0urAgAA',
+ 'Pipe Culvert_EX.svg':'H4sIAAAAAAAEAG1SPU/DMBDd+ytO7pz4Iw0lwWkFAxNssLCgqHFTq65TxVZThPjvOLFDEwkPvnd+753uTubb60nBRbRGNrpANCYIhN41ldR1gd7fnqN7tN0suLnU4JTaFOhg7TnHuOu6uEvipq0xI4Rgp0Bekl+V1Mf/hDTLMjywCC5SdE/NtUAECLA1pAxtFgC8EnvTAweN/VLCY4B4p0xEv/dSqVw3WjwY2zZHkS+T4YQ06mRlDzkb05O0olXShZySn2kp5kst98OZUUmgfGVPcfzXDcdjj9xK694ejREWGOHY5z1Tg6wKNDCfzC21Km0Z6fIkwqOTozDmubQHcOJXChRe2F24Uxdof38g2KnSuNUPK0A4+OpxNZMKSZz29iGmdGZko3FmWAVDH9cxSx1kc+gagKDL4nUatAm7KabYa0bHanVzDPOwKfDsfLzkbzxc+2W7wPvftVn8Aqh17s6tAgAA',
+ 'Pipe Culvert_DS.svg':'H4sIAAAAAAAEAG1SsW6DMBDd8xUnZwZjA02hJlE7dGq3dukSoeAQK46JsBVSVf33GmwSkOrB987vvdPdyWxzPUm48FaLRhWIhBECrnZNJVRdoM+P1+ARbdYLpi81WKXSBToYc84x7rou7OKwaWtMoyjCVoGcJL9KoY7/CUmWZXhgEVwE716aa4EiiICuIKVovQBgFd/rHliozbfkDgOEO6kD8rMXUuaqUfxJm7Y58nzJM5KRMQ06UZlDTsf0JAxvpbAhJ9HvtBR1pZb74cyo2FOusqMYvnXD8NgjM8LYt2etuYGEYZf2RA2iKtBAbBMEVWnKQJUn7t8gQX7Gc2kOYKXvBAi80Qd/pzaQ/v5CsJOltnsf5kfY++pxL5MKcZj29iGmZGako3FmSLyhj6uQphbSObQNgNdl4Sr12pjeFVPsNKMjSe6OYR46BY6djxffxsO127QNrP9a68Uf9IUBQqoCAAA=',
+ 'Pipe Culvert_SD.svg':'H4sIAAAAAAAEAG2TQY+bMBCF7/kVI/ecwTYYQwRZbSP1tLm154oGlkXLktWCQqqq/71jz9BeeknejL95frZM9XB/G+HWfczDdaqVQa2gmy7Xdpj6Wn37+mVfqIfjrppvPRA5zbV6WZb3Q5Ks64pritePPrFa64QIxcjhPg7T6/9AU5ZlElcV3IZu/Xy910qDhkKj8QacOu4AqrZ7noMgOS8/x441AF7GeW9+PQ/jePikdfOja38zlvzlqmSbrpZhod7jPHcL2KxKuA4rPQxtreLKd5spaJul2U/NWydNwpUE6LfNq/dmeQEaO1t0FPmpQJ9nJE6GwmehZQxaahk0ptyKAJ9Ep1gUBgR3wAYOngITqDgXjBjUPKw3w/jLTQ1nS55lGoKkhNuAn1KHVttgkGNKLR6RIpqJ5g0EdyAOIQq7hjQlliYsGspJLQnPBZ+KtaRjnOJtuc4Z7RVvyhVY+BD9lGu0LqjcYOq3M0kRTUXzboLT7bADBWRTArMMyzy0MmKdDLCORix5A2E1bJHO3mCmfQjnPeY+3p4vUTv77zXyrBTRUzTvJbgDcaBw4kqk16htTiovsKSWnIcLPihr3kRwDVsuBZexmelri09eJfIak57fOP1V4Ys77v4AOy2LisEDAAA',
+ 'Box Culvert_SD.svg':'H4sIAAAAAAAEAG1US4/aMBC+8yss75mJ7byzgVW7Uk9wa89VSrwh2pAg4hKqqv+9k8yYslKRIP6Yme8xIZQvt1MnrvYytkO/kRqUFLY/DHXbNxv57euXdSZftqtyvDYCO/txI4/OnYsgmKYJphCGSxMYpVSAHZJailvX9u//a9R5ngdLVYpra6fPw20jlVAiU6BTLWLQJpXblRBlbd/G+YDH0f3qLJ2FgEM3rvXvt7brin7o7fPoLsO7LZ6Uqn7YmuF6amt3LGIPUdIeqnNxGX72955T6+yla/FSaPXnkd8QP3LOLyqVwd1HGXh3pWsdfvdpHK0TJi4DwnOlEW29kUvlu4mlqCtXrfvqZPlLbJcc8Fy5o8DmvYFYzO9dmkKC+8CzFIeuGnHtS24Z8Ejj9/FxWM0LFLsM0iRi8KrxGvmS1mCwhJ9R4oGBZOkjFIFS2EdDyw0RREfn3SwTMzNonTNQPKg8nfIiSxOp/7O4N1jNQ284DCEz2jsOYzDKMAoTCLFEZAxYghEJ8xC5YT5vmbS86xxy7Rs1ZsMShybg90GIU9AQx3j0vo/QxX3zcQZZ6uO+JgpM7FGiIcQS8TFgKUbkgofIH/NxEJLiHFEEeeJLEQaOmYDOTE2ARHmC7Dza3qcaovnmkQz/+jhEmoOKfXR+UImPASsxIg88ROaYj0OwFqdIFSiTMEoyyOcAtAcCfkWESJiHyNKj9w9Pi7k/LUFDjy1eyvmParv6Cw6TAaf4BAAA',
+ 'Earth Canal.svg':'H4sIAAAAAAAEAH1SwW6DMAy99yss70xiQJTCQqvtsNN2284TKymNmoaKRKXTtH9foLRbJbRc8p79nuM4EavTXsNRtlY1psCQEYI066ZSpi7w7fUpWOBqORP2WINXGlvg1rlDznnXdayLWdPWPCIi7hV4luQnrcxuShhmWcaHLMJRye6xORVIQLAgFqYhzFmSxbicAYhKbmwPPLTuU8szBmBrbYPwa6O0zk1j5L11bbOT+R1R+SGrkQadqtw2Ty50r5xstfJbHtL331LRZKl+/eMV/NqT4JdOhVPOxx6slQ6iVPAz7zM1qKrAIfMepQhV6crAlHs5Br0cx8seSrcFL36JWAIxSyiB5zRlcz+dgSGsdWn9MwxzQD5lmzPK4qttYDe2aNpG7Pcsj6csgtf+M/RvvZz9AA7aRwM7AgAA',
+ 'Rip Rap Canal.svg':'H4sIAAAAAAAEAIVVTa/aMBC88yss98zG345p4KmN1FN7ay+9VBTyIHohPJEIqKr+9zrZNdAWFaSIGXtndtZJlOLpvGvYsTp09b6dcwmCs6pd7dd1u5nzL58/THP+tJgU3XHDYmXbzfm2719nWXY6neCkYX/YZEoIkcUKjiWzc1O3L/cKZQghG3c5O9bV6f3+POeCCZYLkF4yyxcTxop19dwNIMKu/9FUiBmDVdNN5c/numlm7b6t3nb9Yf9Szd4IsfxerYlOT/W6385soru6rw5NHf9mUvy6tVJ3rYbff7RFdslUZClp0dd9XHvXdVXPVF5kyIedDavXcz7ufFM5Z+tlv5y2y11Fi7Gc07Cvy37LYvEnBZYN10fvwcVziZizVbPs4vGPZ8CzvyUGgh1FxrMSiYwODkzOBDirWA7aESylAGUkMSnBOywnSDbENNhgGEkMGENeCMuxBWLsi/W3gb7+kV79m156sMKNM5eEJRirmQwg9JBTRC8BQUoipVLgg0pbBrRMGiKjGWE9xiBJXAoXNyQl9kFCAVBzk+zhFDoekTTYmDAm0vEgdU5ZtQYnQxpDWzAhMe1BqIsICbohxkgkwbDkRmNQI9rCCCS6Zns4h1Hg4j0dOxPGSMbE1zSduXEgbLo3pfEQdGImxPKLCAm6IcZIJMGw5EZzUCPawggkumZ7OIe1oDy+SSVhjGQdpLthc3AJl06AdekJcwpEnhRERivCmIckmBTNaIaxCa1jc1TcpHo4gYtPX66oLWLKE0AKR0l9fJRzn4bwCnKXmB8CJBGR0Y0wRiIJhiU3moIaIaMINPk12905imwTPxzDd2Ex+Q0IAGCpZwYAAA==',
+ 'Concrete Canal.svg':'H4sIAAAAAAAEAH1SyU7DMBC99ytG5hxv2YPTCg6cyg3OKDRuatV1qthqihD/jrMhEAhfPG/em8UzFpvrScNFdla1pkQMUwTS7NpamaZEz08PQYY265Wwlwa80tgSHZw7F4T0fY/7ELddQzillHgFmiTFVStz/EvI8jwnI4vgomR/315LRIFCRjFLGSQ4TBlarwBELfd2MLxp3ZuWkw2Ad9oG7H2vtC5Ma+StdV17lMUNpdWrrGcY9Kp2hyJe4Ek52Wnlr4LRj++p+J+phvNPrCBfPQmydCqcct53Z610wHNBJjwwDai6RCPzwnMEdeWqwFQnOTu9HM2PPVfuAF78yHEMIaZJDts0xYmfzogQ7HRl/RrGOSDyOyxLIMYZT2HLYhzmIVAcRxFseYojj2YuojiKkoWLfVgYL1wyxLGFm6uP3I/qfKouSOM/yLD/9eoTqhjLjE8CAAA=',
+ 'U Ditch.svg':'H4sIAAAAAAAEAG1UTY+bMBC951dY7jnGNh8GSrJqV+opubXnFQ1egpZAFGiSqup/r+2ZYdOqSIh5njdv3hhM9XQ/9exqL1M3DhuuhOTMDoex6YZ2w799/bLO+dN2VU3XljnmMG34cZ7PZRTdbjdxi8V4aSMtpYwcgwOlvPfd8PY/oiqKIgpZzq6dvX0e7xsumWS5FMoolvLtirGqsa+TD1w4zT97CzFj4tBPa/Xrtev7chgH+3GaL+ObLT9IWX+3DcL1rWvmY5kSdO3soT6Xl/HHsHBO3WwvfecepZK/H/U16DtNf0GqihYfVUTuqrmb3dqnabIz01kVAfaZlnXNhofMi844a+q5Xg/1yeKio3Mc8FzPR+bIey1S5u+dMSJze+Fizg59PbktD3PzCEta2o9/i5U2bJcLkyUIngshKS6EDutxqpY4Aw6AQsYs8OPABx2Id14fwmcttKZ1jWWatDQ2ABI0fve210roIiancSxyrchqnAhZ5IgciEPKiy0gQx4g3xiLwA3qkWXoRa7dl60M2ZbCBBvBOwEYgFCYAopwjEfv+yRzDBokzUVuChokLYRKKedAHFJebwEZ8gB5F1gE/lAPB4FWOIcD0tD2J6nIUxSgOEgT8E2xAuw82t4bJRJJ471/dqGPQ0VCb8Pk4XSC3gJCpwV5D1gE5lAPh8BeOIVDKqacka7YkAQBUCcUGkMRWnrw/tcx0csxiVo4r+5R+b/TdvUHHBmAju0EAAA='
+};
+const pavementColors={AC:'#333333',RC:'#52525b',CP:'#64748b',DBST:'#1f2937',SBST:'#475569',Laterite:'#c2410c',Unpave:'#d6a64f'};
+const pavementNames={AC:'Asphalt Concrete',RC:'Reinforced Concrete',CP:'Composite Pavement',DBST:'Double Bituminous Treatment Surface',SBST:'Single Bituminous Treatment Surface',Laterite:'Laterite',Unpave:'Unpaved'};
+function normalizePavement(value){
+ const text=String(value||'').trim();
+ if(/^PC$/i.test(text))return'RC';
+ return Object.keys(pavementNames).find(code=>code.toLowerCase()===text.toLowerCase()||pavementNames[code].toLowerCase()===text.toLowerCase())||text
+}
+function pavementListName(value){const code=normalizePavement(value);return pavementNames[code]?`${code} - ${pavementNames[code]}`:code}
+const landmarkSymbols={Hospital:{Major:'Hospital_Major.svg',Minor:'Hospital_Minor.svg'},School:{Major:'School_Major.svg',Minor:'School_Minor.svg'},Pagoda:{Major:'Pagoda_Major.svg',Minor:'Pagoda_Minor.svg'},Market:{Major:'Market_Major.svg',Minor:'Market_Minor.svg'}};
+const C={
+ ex_settlement:{n:'Settlement',group:'Existing',mode:'mixed',o:['Urban','Sub-Urban','Rural'],c:{Urban:'#4b5563','Sub-Urban':'#9ca3af',Rural:'#ffffff'}},
+ ex_landmark:{n:'Landmark',group:'Existing',mode:'landmark',diagramHidden:true,o:['Hospital','School','Pagoda','Market','Custom'],symbols:{'Hospital (Major)':'Hospital_Major.svg','Hospital (Minor)':'Hospital_Minor.svg','School (Major)':'School_Major.svg','School (Minor)':'School_Minor.svg','Pagoda (Major)':'Pagoda_Major.svg','Pagoda (Minor)':'Pagoda_Minor.svg','Market (Major)':'Market_Major.svg','Market (Minor)':'Market_Minor.svg'}},
+ ex_terrain:{n:'Terrain',group:'Existing',mode:'range',o:['Flat','Rolling','Mountainous'],c:{Flat:'#fde68a',Rolling:'#b45309',Mountainous:'#78350f'}},
+ ex_pavement:{n:'Pavement',group:'Existing',mode:'range',kind:'pavement',o:['AC','RC','CP','DBST','SBST','Laterite','Unpave'],c:pavementColors},
+ ex_width:{n:'Road Width',group:'Existing',mode:'range',kind:'width',hidden:true,o:[]},
+ ex_structure:{n:'Structure',group:'Existing',mode:'point',kind:'dimension',o:['Bridge','Box Culvert','Pipe Culvert','Custom'],symbols:{Bridge:'Bridge_EX.svg','Box Culvert':'Box Culvert_EX.svg','Pipe Culvert':'Pipe Culvert_EX.svg'}},
+ ex_drain:{n:'Side Drain',group:'Existing',mode:'range',kind:'dimension',o:['U-Ditch','Pipe Culvert','Box Culvert','Earth Canal','Rip Rap Canal','Concrete Canal','Custom'],symbols:{'U-Ditch':'U Ditch.svg','Pipe Culvert':'Pipe Culvert_SD.svg','Box Culvert':'Box Culvert_SD.svg','Earth Canal':'Earth Canal.svg','Rip Rap Canal':'Rip Rap Canal.svg','Concrete Canal':'Concrete Canal.svg'}},
+ ds_speed:{n:'Speed',group:'Design',mode:'range',o:['20 km/h','30 km/h','40 km/h','50 km/h','60 km/h','70 km/h','80 km/h','90 km/h','100 km/h','120 km/h'],c:{'20 km/h':'#e0edfc','30 km/h':'#dceafb','40 km/h':'#d8e7fa','50 km/h':'#d3e4f9','60 km/h':'#cfe1f8','70 km/h':'#c5ddf7','80 km/h':'#bad8f5','90 km/h':'#aed2f2','100 km/h':'#a2ccef','120 km/h':'#93c5ed'}},
+ boundary:{n:'Boundary',group:'Boundary',mode:'range',kind:'boundary',o:[]},
+ ds_pavement:{n:'Pavement',group:'Design',mode:'range',kind:'pavement',o:['AC','RC','CP','DBST','SBST','Laterite','Unpave'],c:pavementColors},
+ ds_width:{n:'Road Width',group:'Design',mode:'range',kind:'width',hidden:true,o:[]},
+ ds_structure:{n:'Structure',group:'Design',mode:'point',kind:'dimension',o:['Bridge','Box Culvert','Pipe Culvert','Custom'],symbols:{Bridge:'Bridge_DS.svg','Box Culvert':'Box Culvert_DS.svg','Pipe Culvert':'Pipe Culvert_DS.svg'}},
+ ds_drain:{n:'Side Drain',group:'Design',mode:'range',kind:'dimension',o:['U-Ditch','Pipe Culvert','Box Culvert','Earth Canal','Rip Rap Canal','Concrete Canal','Custom'],symbols:{'U-Ditch':'U Ditch.svg','Pipe Culvert':'Pipe Culvert_SD.svg','Box Culvert':'Box Culvert_SD.svg','Earth Canal':'Earth Canal.svg','Rip Rap Canal':'Rip Rap Canal.svg','Concrete Canal':'Concrete Canal.svg'}}
+};
+let D=[],customCategories=[],settings={stationLabels:{},labelOffsets:{}};
+const K=()=>Object.keys(C);
+const EXPORT_PAGE_WIDTH=1350;
+const makeId=()=>`item_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`;
+function sample(){D=[
+ {c:'ex_settlement',s:0,e:3000,v:'Rural'},{c:'ex_settlement',s:3000,e:6000,v:'Sub-Urban'},{c:'ex_settlement',s:6000,e:9000,v:'Urban'},
+ {c:'ex_landmark',s:6200,v:'School',importance:'Major',sym:'symbols/School_Major.svg'},{c:'ex_terrain',s:0,e:9000,v:'Flat'},
+ {c:'ex_pavement',s:0,e:5000,v:'DBST',roadWidth:'6'},{c:'ex_pavement',s:5000,e:9000,v:'AC',roadWidth:'7'},
+ {c:'ex_structure',s:3500,v:'Box Culvert',dim:'1.2 x 1.0 m'},{c:'ds_speed',s:0,e:9000,v:'60 km/h'},
+ {c:'ds_pavement',s:0,e:9000,v:'AC',roadWidth:'7'},
+ {c:'ds_structure',s:7000,v:'Bridge'}].map(d=>({...d,_id:makeId()}));save()}
+function save(){
+ try{localStorage.setItem('rd3',JSON.stringify({items:D,custom:customCategories,settings}))}
+ catch(e){$('msg').textContent='Unable to save diagram in this browser: '+e.message}
+}
+function migrate(oldItems){
+ const ids={settle:'ex_settlement',terrain:'ex_terrain',pave:'ex_pavement',width:'ex_width',speed:'ds_speed',bridge:'ex_structure',culvert:'ex_structure',struct:'ex_landmark'};
+ return oldItems.filter(d=>d&&ids[d.c]).map(d=>{
+  let v=d.v;
+  if(d.c==='struct'){v=`${v} (Major)`;return{...d,c:ids[d.c],v,sym:`symbols/${v.startsWith('School')?'School':v.startsWith('Pagoda')?'Pagoda':'Market'}_Major.svg`}}
+  if(d.c==='bridge')v=`Bridge (${v})`;
+  if(d.c==='culvert')v=v==='Box'?'Box Culvert':v==='Pipe'?'Pipe Culvert':v;
+  return{...d,c:ids[d.c],v}
+ })
+}
+function migrateLandmarks(items){
+ return items.map(d=>{
+  if(d.c==='ex_landmark'){
+   const match=String(d.v).match(/^(.+?)\s*\((Major|Minor)\)$/i),name=match?match[1]:String(d.v),importance=match?match[2][0].toUpperCase()+match[2].slice(1):d.importance||'Major';
+   const symbol=landmarkSymbols[name]?.[importance];
+   return{...d,v:name,importance,sym:d.sym||(symbol?`symbols/${symbol}`:''),dim:undefined}
+  }
+  if(d.c!=='ex_settlement'||['Urban','Sub-Urban','Rural'].includes(d.v))return d;
+  const match=String(d.v).match(/^(.+?)\s*\((Major|Minor)\)$/i);if(!match)return d;
+  const name=match[1],level=match[2][0].toUpperCase()+match[2].slice(1),image=landmarkSymbols[name]?.[level];
+  return{...d,c:'ex_landmark',v:name,importance:level,dim:undefined,sym:d.sym||(image?`symbols/${image}`:'' )}
+ })
+}
+try{
+ const stored=localStorage.getItem('rd3');
+ if(stored){const state=JSON.parse(stored);D=Array.isArray(state.items)?migrateLandmarks(state.items).map(d=>({...d,_id:d._id||makeId(),...(['ex_boundary','ds_boundary'].includes(d.c)?{c:'boundary'}:{}),...(['ex_pavement','ds_pavement'].includes(d.c)?{v:normalizePavement(d.v)}:{})})):[];customCategories=Array.isArray(state.custom)?state.custom:[];if(state.settings&&typeof state.settings==='object')settings={...settings,...state.settings,stationLabels:{...settings.stationLabels,...(state.settings.stationLabels||{})},labelOffsets:{...settings.labelOffsets,...(state.settings.labelOffsets||{})}}}
+ else{const old=localStorage.getItem('rd2');if(old)D=migrate(JSON.parse(old)).map(d=>({...d,_id:makeId()}))}
+}catch(e){$('msg').textContent='Unable to load saved diagram: '+e.message}
+const oldCanalIds=new Set(customCategories.filter(c=>c&&c.name?.toLowerCase()==='canal').map(c=>c.id));
+if(oldCanalIds.size){D=D.map(d=>oldCanalIds.has(d.c)?{...d,c:'ex_drain',v:'Earth Canal',sym:'symbols/Earth Canal.svg'}:d);customCategories=customCategories.filter(c=>!oldCanalIds.has(c.id))}
+customCategories.forEach(c=>{if(c&&c.group==='Designing')c.group='Design';if(c&&c.id&&c.name&&['Existing','Design'].includes(c.group)&&['range','point'].includes(c.mode))C[c.id]={...c,n:c.name,mode:c.mode,o:[],group:c.group,custom:true}})
+if(!D.length)sample();
+const fmt=m=>Math.floor(m/1000)+'+'+String(Math.round(m%1000)).padStart(3,'0');
+function parse(x){x=String(x||'').trim();let m=x.match(/^(\d+)\s*\+\s*(\d{1,3})$/);if(m)return +m[1]*1000+ +m[2];return x===''||isNaN(x)?NaN:+x}
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function col(c,v){const m=C[c].c&&C[c].c[v];if(m)return m;let h=0;for(const ch of String(v))h=(h*31+ch.charCodeAt(0))%360;return`hsl(${h},55%,68%)`}
+function ink(color){const m=color.match(/^#([0-9a-f]{6})$/i);if(m){const n=parseInt(m[1],16),r=n>>16,g=n>>8&255,b=n&255;return(0.299*r+0.587*g+0.114*b)<145?'#fff':'#111'}return'#111'}
+function isRange(c,v){const cfg=C[c];return cfg.mode==='range'||(cfg.mode==='mixed'&&cfg.o.includes(v))}
+function addItem(c,s,e,v,dim='',sym='',roadWidth='',importance='',pointOnly=false){
+ if(!C[c])return'Choose a category';
+ const cfg=C[c];
+ if(cfg.kind==='pavement')v=normalizePavement(v);
+ if(isNaN(s))return'Start station is not a valid number';
+ if(!pointOnly&&isRange(c,v)){if(isNaN(e)||e<=s)return'End must be greater than start';if(!v)return'Enter a value';
+  const n=[];D.forEach(o=>{if(o.c!==c||o.e<=s||o.s>=e){n.push(o);return}
+   if(o.s<s)n.push({...o,e:s});if(o.e>e)n.push({...o,s:e})});D=n;D.push({_id:makeId(),c,s,e,v,...(dim?{dim}:{}),...(sym?{sym}:{}),...(cfg.kind==='pavement'&&roadWidth?{roadWidth}:{})})}
+ else{if(!v)return'Choose or enter a value';D.push({_id:makeId(),c,s,v,...(dim?{dim}:{}),...(sym?{sym}:{}),...(cfg.mode==='landmark'?{importance:importance||'Major'}:{})})}
+ return''}
+function drawItems(){
+ const key=$('cat').value,items=D.map((d,i)=>({d,i})).filter(o=>o.d.c===key).sort((a,b)=>a.d.s-b.d.s),field=C[key]?.kind;
+ const showDimension=field==='dimension'||field==='pavement',fieldName=field==='pavement'?'Road Width (metres)':'Dimension';
+ $('tb').innerHTML=`<thead><tr><th>Station</th><th>Value</th>${showDimension?`<th>${fieldName}</th>`:''}<th></th></tr></thead><tbody>${items.map(({d,i})=>
+  `<tr><td>${fmt(d.s)}${d.e!=null?' – '+fmt(d.e):''}</td><td>${esc(field==='pavement'?pavementListName(d.v):d.v)}</td>${showDimension?`<td>${esc(field==='pavement'?d.roadWidth||'':d.dim||'')}</td>`:''}<td class="x" data-i="${i}">✕</td></tr>`).join('')}</tbody>`;
+ $('cnt').textContent='('+items.length+')'
+}
+function pointCategoryKeys(){return K().filter(k=>['point','landmark'].includes(C[k].mode))}
+function stationLabelsEnabled(key){return settings.stationLabels[key]??(C[key].mode!=='landmark')}
+function renderPointLabelControls(){
+ $('pointLabels').innerHTML=pointCategoryKeys().map(key=>{
+  const checked=stationLabelsEnabled(key);
+  return`<label class="point-label-option"><input type="checkbox" data-point-label="${esc(key)}" ${checked?'checked':''}>${esc(C[key].group)}: ${esc(C[key].n)}</label>`
+ }).join('');
+ $('pointLabels').querySelectorAll('[data-point-label]').forEach(input=>input.onchange=()=>{
+  settings.stationLabels[input.dataset.pointLabel]=input.checked;save();draw()
+ })
+}
+function symbolForItem(d){
+ const cfg=C[d.c];if(!cfg)return'';
+ if(d.sym)return d.sym;
+ if(cfg.mode==='landmark')return landmarkSymbols[d.v]?.[d.importance||'Major']?`symbols/${landmarkSymbols[d.v][d.importance||'Major']}`:'';
+ return cfg.symbols?.[d.v]||''
+}
+function pointItems(key){return key==='ex_settlement'?D.filter(d=>d.c==='ex_landmark'):D.filter(d=>d.c===key)}
+function diagramItems(key){return D.filter(d=>d.c===key||(key==='ex_settlement'&&d.c==='ex_landmark'))}
+function pointLabelLayout(key,scale,items=pointItems(key)){
+ const lanes=[],positions=new Map();
+ items.slice().sort((a,b)=>a.s-b.s).forEach(item=>{
+  const X=10+item.s/scale,spacing=item.c==='ex_landmark'?Math.min(150,Math.max(46,String(item.v).length*6+18)):46;
+  let lane=lanes.findIndex(last=>X-last>=spacing);
+  if(lane<0)lane=lanes.length;
+  lanes[lane]=X;positions.set(item._id,lane)
+ });
+ return{positions,count:lanes.length}
+}
+function legendEntries(){
+ const entries=[],seen=new Set();
+ D.forEach(d=>{
+  const cfg=C[d.c];if(!cfg)return;
+  if(!['point','landmark'].includes(cfg.mode))return;
+  const key=`${d.c}:${d.v}`;if(seen.has(key))return;seen.add(key);
+  const symbol=symbolForItem(d);
+  const label=cfg.mode==='landmark'?`${d.v} - Landmark`:`${cfg.group} ${cfg.n} - ${d.v}`;
+  const cluster=cfg.mode==='landmark'?0:/_structure$/.test(d.c)?1:2;
+  entries.push({key,symbol,color:col(d.c,d.v),label,width:26+label.length*5.7,gray:d.c==='ex_drain',cluster,group:cfg.group,name:cfg.n,value:d.v})
+ });
+ entries.sort((a,b)=>a.cluster-b.cluster||a.group.localeCompare(b.group)||a.name.localeCompare(b.name)||String(a.value).localeCompare(String(b.value)));
+ return entries
+}
+function draw(){
+ const sc=+$('scale').value;$('sc').textContent=sc;
+ const L=Math.max(1000,...D.map(d=>d.e??d.s)),LW=130,T=44,x=m=>10+m/sc,baseW=Math.ceil(L/sc)+40;
+ let Y0=T;const rows=[{group:'Boundary',k:'boundary',y:Y0,h:44,layout:{count:0,positions:new Map()}}];Y0+=44;
+ ['Existing','Design'].forEach(group=>{
+  rows.push({group,y:Y0,h:24});Y0+=24;
+  K().filter(k=>C[k].group===group&&!C[k].hidden&&!C[k].diagramHidden).forEach(k=>{
+   const pointItemsForRow=D.filter(item=>item.c===k&&item.e==null),hasPointItems=pointItemsForRow.length>0;
+   const layout=['point','landmark'].includes(C[k].mode)||k==='ex_settlement'?pointLabelLayout(k,sc):hasPointItems?pointLabelLayout(k,sc,pointItemsForRow):{count:0};
+   const h=(C[k].mode==='point'||hasPointItems)&&stationLabelsEnabled(k)?52+Math.max(0,layout.count-1)*11:k==='ex_settlement'&&stationLabelsEnabled('ex_landmark')&&layout.count?52+Math.max(0,layout.count-1)*11:44;
+   const o={k,y:Y0,h,layout};Y0+=o.h;rows.push(o)
+  })
+ });
+ const legend=legendEntries(),legendTop=Y0+10,legendRows=(()=>{let rows=1,width=78;legend.forEach(entry=>{if(width+entry.width>EXPORT_PAGE_WIDTH-16&&width>78){rows++;width=78}width+=entry.width});return rows})(),W=Math.max(baseW,EXPORT_PAGE_WIDTH),H=legendTop+22+legendRows*18;
+ const step=[1000,5000,10000,20000,50000].find(s=>s/sc>=70)||100000;
+ let b=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
+ rows.forEach(r=>{if(r.k)b+=`<rect x="10" y="${r.y}" width="${W-30}" height="${r.h}" fill="none" stroke="var(--ln)"/>`});
+ for(let m=0;m<=L;m+=1000){const M=m%step==0,X=x(m);
+  if(M)b+=`<line x1="${X}" x2="${X}" y1="${T-10}" y2="${Y0}" stroke="var(--bl)" stroke-dasharray="8 3 2 3" opacity=".6"/><text x="${X}" y="${T-16}" font-size="11" text-anchor="middle">ST ${fmt(m)}</text>`;
+  else if(1000/sc>=6)b+=`<line x1="${X}" x2="${X}" y1="${T-6}" y2="${T}" stroke="var(--mu)"/>`}
+ rows.forEach(r=>{if(!r.k)return;const k=r.k;
+  diagramItems(k).sort((a,b)=>a.s-b.s).forEach(d=>{
+   const cfg=C[k],X=x(d.s),Y=r.y+r.h/2;
+   if(isRange(k,d.v)&&Number.isFinite(d.e)){
+    const w=Math.max(1,(d.e-d.s)/sc),f=col(k,d.v);
+    if(cfg.kind==='pavement'){
+     const legacyKey=k==='ex_pavement'?'ex_width':'ds_width',legacy=D.filter(item=>item.c===legacyKey&&item.s<d.e&&item.e>d.s);
+     const segments=d.roadWidth?[{s:d.s,e:d.e,width:d.roadWidth}]:legacy.length?legacy.map(item=>({s:Math.max(d.s,item.s),e:Math.min(d.e,item.e),width:item.v})):[{s:d.s,e:d.e,width:''}];
+     segments.forEach(segment=>{
+      const start=x(segment.s),end=x(segment.e),widthValue=Number.parseFloat(String(segment.width).replace(/[^\d.]/g,'')),thickness=Math.max(5,Math.min(26,(Number.isFinite(widthValue)?widthValue:6)*2.5));
+      const widthLabel=String(segment.width).replace(/\s*m\s*$/i,'').trim(),label=`${normalizePavement(d.v)}${widthLabel?`, ${widthLabel}m`:''}`;
+      const top=Y-thickness/2;
+      b+=`<rect x="${start}" y="${top}" width="${Math.max(1,end-start)}" height="${thickness}" fill="${f}" stroke="${ink(f)}" stroke-width="1.5"><title>${esc(label)}: ${fmt(segment.s)} – ${fmt(segment.e)}</title></rect>`;
+      if(end-start>24)b+=`<text x="${(start+end)/2}" y="${Y}" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" style="fill:${ink(f)}">${esc(label)}</text>`
+     })
+    }else if(k==='boundary'){
+     const end=x(d.e),center=(X+end)/2,label=String(d.v||''),lineY=Y+7,textWidth=Math.min(end-X-8,Math.max(14,label.length*6+8)),half=Math.max(7,textWidth/2);
+     b+=`<line x1="${X}" x2="${end}" y1="${lineY}" y2="${lineY}" stroke="#374151" stroke-width="1.5"><title>${esc(label)}: ${fmt(d.s)} – ${fmt(d.e)}</title></line>`;
+     b+=`<line x1="${X}" x2="${X}" y1="${lineY-7}" y2="${lineY+7}" stroke="#374151" stroke-width="1.5"/><line x1="${end}" x2="${end}" y1="${lineY-7}" y2="${lineY+7}" stroke="#374151" stroke-width="1.5"/>`;
+     b+=`<path d="M${X} ${lineY}l7 -3v6z M${end} ${lineY}l-7 -3v6z" fill="#374151"/>`;
+     b+=`<rect x="${center-half}" y="${lineY-7}" width="${half*2}" height="14" fill="var(--card)"/><text x="${center}" y="${lineY}" text-anchor="middle" dominant-baseline="middle" font-size="10">${esc(label)}</text>`
+    }else if(k==='ex_drain'||k==='ds_drain'){
+     const drainCfg=C[k],file=drainCfg.symbols[d.v]||'';
+     const drainHref=d.sym||(file?`symbols/${encodeURIComponent(file).replace(/%20/g,'%20')}`:'');
+     if(drainHref)b+=`<image href="${esc(drainHref)}" x="${X}" y="${Y-3.5}" width="${w}" height="7" preserveAspectRatio="none" ${k==='ex_drain'?'style="filter:grayscale(1);opacity:.72"':''}><title>${esc(d.v)}${d.dim?' · '+esc(d.dim):''}: ${fmt(d.s)} – ${fmt(d.e)}</title></image>`;
+     else b+=`<line x1="${X}" x2="${X+w}" y1="${Y}" y2="${Y}" stroke="${f}" stroke-width="5" stroke-dasharray="8 3"><title>${esc(d.v)}: ${fmt(d.s)} – ${fmt(d.e)}</title></line>`;
+    }else{
+     b+=`<rect x="${X}" y="${r.y+6}" width="${w}" height="${r.h-12}" fill="${f}" stroke="#0003" stroke-width=".5"><title>${esc(d.v)}: ${fmt(d.s)} – ${fmt(d.e)}</title></rect>`;
+     if(k==='ex_settlement'){
+      const landmarks=D.filter(item=>item.c==='ex_landmark'&&item.s>=d.s&&item.s<=d.e),center=X+w/2;
+      const collision=landmarks.some(item=>Math.abs(x(item.s)-center)<32),labelX=collision?(x(landmarks[0].s)<center?X+w*.72:X+w*.28):center;
+      if(w>32)b+=`<text x="${labelX}" y="${Y}" text-anchor="middle" dominant-baseline="middle" font-size="10" style="fill:${ink(f)}">${esc(d.v)}</text>`
+     }else if(w>d.v.length*6+8)b+=`<text x="${X+w/2}" y="${Y}" text-anchor="middle" dominant-baseline="middle" font-size="10" style="fill:${ink(f)}">${esc(d.v)}</text>`
+    }
+   }else{
+       const symbol=symbolForItem(d),href=symbol&&(symbol.startsWith('data:')?symbol:symbol.startsWith('symbols/')?symbol:`symbols/${encodeURIComponent(symbol).replace(/%20/g,'%20')}`),structure=d.c==='ex_structure'||d.c==='ds_structure',landmark=d.c==='ex_landmark',symbolWidth=href?(structure?20:12):6,symbolHeight=href?(structure?21:15):6,iconY=Y;
+       if((d.c==='ex_drain'||d.c==='ds_drain')&&Number.isFinite(d.e)&&href)b+=`<image href="${esc(href)}" x="${X}" y="${Y-3.5}" width="${Math.max(1,(d.e-d.s)/sc)}" height="7" preserveAspectRatio="none" ${d.c==='ex_drain'?'style="filter:grayscale(1);opacity:.72"':''}><title>${esc(d.v)}${d.dim?' · '+esc(d.dim):''}: ${fmt(d.s)} – ${fmt(d.e)}</title></image>`;
+       else if(href)b+=`<image href="${esc(href)}" x="${X-symbolWidth/2}" y="${iconY-symbolHeight/2}" width="${symbolWidth}" height="${symbolHeight}" preserveAspectRatio="xMidYMid meet"><title>${esc(d.v)}${d.dim?' · '+esc(d.dim):''}${landmark?'':' at '+fmt(d.s)}</title></image>`;
+       else b+=`<circle cx="${X}" cy="${iconY}" r="3" fill="${col(k,d.v)}" stroke="#111"><title>${esc(d.v)} at ${fmt(d.s)}</title></circle>`;
+       if(stationLabelsEnabled(d.c)){
+        const lane=r.layout.positions.get(d._id)||0,labelY=r.y+r.h-6-(r.layout.count-1-lane)*11,offset=settings.labelOffsets[`${d._id}:station`]||{x:0,y:0};
+        b+=`<text class="drag-label" data-label-id="${esc(d._id)}:station" data-base-x="${X}" data-base-y="${labelY}" x="${X+(offset.x||0)}" y="${labelY+(offset.y||0)}" text-anchor="middle" font-size="8" style="fill:var(--tx)">${fmt(d.s)}</text>`
+       }
+   }})});
+ b+=`<g class="diagram-legend"><text class="legend-title" x="16" y="${legendTop+26}">Legend</text>`;
+ let legendX=78,legendRow=0;
+ legend.forEach(entry=>{
+  if(legendX+entry.width>EXPORT_PAGE_WIDTH-16&&legendX>78){legendRow++;legendX=78}
+  const rowY=legendTop+14+legendRow*18;
+  const href=entry.symbol&&(entry.symbol.startsWith('data:')?entry.symbol:entry.symbol.startsWith('symbols/')?entry.symbol:`symbols/${encodeURIComponent(entry.symbol).replace(/%20/g,'%20')}`);
+  if(href)b+=`<image href="${esc(href)}" x="${legendX}" y="${rowY}" width="12" height="15" preserveAspectRatio="${entry.key.startsWith('ex_landmark:')?'xMidYMax meet':'xMidYMid meet'}" ${entry.gray?'style="filter:grayscale(1);opacity:.72"':''}/>`;
+  else b+=`<circle cx="${legendX+6}" cy="${rowY+7}" r="3" fill="${entry.color}" stroke="#111" stroke-width=".7"/>`;
+  b+=`<text x="${legendX+17}" y="${rowY+12}" font-size="10">${esc(entry.label)}</text>`;
+  legendX+=entry.width
+ });
+ b+='</g>';
+ $('bd').innerHTML=b+'</svg>';wireDraggableLabels();
+ let h=`<svg width="${LW}" height="${H}" xmlns="http://www.w3.org/2000/svg"><text x="8" y="26" font-size="14" font-weight="700">${esc($('title').value)}</text>`;
+ rows.forEach(r=>{if(r.group)h+=`<text x="8" y="${r.y+r.h/2}" font-size="11" font-weight="700" dominant-baseline="middle">${r.group.toUpperCase()}</text>`;else h+=`<text x="14" y="${r.y+r.h/2}" font-size="10" font-weight="600" dominant-baseline="middle">${esc(C[r.k].n)}</text>`});
+ $('hd').innerHTML=h+'</svg>';
+ drawItems();save()}
+function wireDraggableLabels(){
+ const svg=$('bd').querySelector('svg');let drag=null;
+ const point=event=>{const p=svg.createSVGPoint();p.x=event.clientX;p.y=event.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())};
+ svg.addEventListener('pointerdown',event=>{
+  const label=event.target.closest('.drag-label');if(!label)return;
+  event.preventDefault();const p=point(event);
+  drag={label,id:label.dataset.labelId,p,x:Number(label.getAttribute('x')),y:Number(label.getAttribute('y'))};
+  svg.setPointerCapture(event.pointerId)
+ });
+ svg.addEventListener('pointermove',event=>{
+  if(!drag)return;const p=point(event),x=drag.x+p.x-drag.p.x,y=drag.y+p.y-drag.p.y;
+  drag.label.setAttribute('x',x);drag.label.setAttribute('y',y);
+  settings.labelOffsets[drag.id]={x:x-Number(drag.label.dataset.baseX),y:y-Number(drag.label.dataset.baseY)}
+ });
+ const end=()=>{if(drag)save();drag=null};
+ svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end)
+}
+function populateCategories(selected){
+ const group=$('group').value,keys=K().filter(k=>C[k].group===group);
+ $('cat').innerHTML=keys.filter(k=>!C[k].hidden).map(k=>`<option value="${k}">${esc(C[k].n)}</option>`).join('')+(group==='Boundary'?'':'<option value="__custom">Custom…</option>');
+ if(selected&&keys.includes(selected))$('cat').value=selected;
+ sel(true)
+}
+function updatePastePlaceholder(category=C[$('cat').value]){
+ const mode=category?.mode||$('customMode').value,range=category?.kind==='boundary'||mode==='range'||mode==='mixed';
+ $('excelPaste').placeholder=range
+  ?'Range (tab-separated): Start\tEnd\tValue\tDimension\n0+000\t1+000\tAC\t7'
+  :'Point (tab-separated): Station\tValue\tDimension\n1+000\tU-Ditch\t1x2'
+}
+function sel(resetOptions=false){
+ const key=$('cat').value,c=C[key],isCustom=key==='__custom';
+ updatePastePlaceholder(c);
+ $('categoryField').classList.toggle('hide',$('group').value==='Boundary');
+ $('clr').disabled=isCustom;
+ $('customCategory').classList.toggle('hide',!isCustom);
+ $('add').classList.toggle('hide',isCustom);
+ if(!c){$('dimensionBox').classList.add('hide');$('landmarkFields').classList.add('hide');$('eW').classList.toggle('hide',isCustom&&$('customMode').value==='point');$('tb').innerHTML='';$('cnt').textContent='(0)';return}
+ $('eW').classList.toggle('hide',c.mode==='point'||c.mode==='landmark');
+ $('v').classList.toggle('hide',c.kind==='boundary');
+ $('vL').classList.toggle('hide',c.kind==='boundary');
+ $('landmarkFields').classList.toggle('hide',c.mode!=='landmark');
+ $('landmarkCustom').classList.toggle('hide',c.mode!=='landmark'||$('v').value!=='Custom');
+ $('dimensionBox').classList.toggle('hide',c.kind!=='dimension'&&c.kind!=='pavement');
+ $('drainCustomBox').classList.toggle('hide',!['ex_drain','ds_drain'].includes(key)||$('v').value!=='Custom');
+ $('vL').textContent=c.mode==='landmark'?'Landmark type':'Value';
+ $('dimensionLabel').textContent=c.kind==='pavement'?'Road Width (metres)':c.kind==='dimension'?'Dimension (optional)':'';
+ $('dimension').type=c.kind==='pavement'?'number':'text';
+ $('dimension').min=c.kind==='pavement'?'0.1':'';
+ $('dimension').step=c.kind==='pavement'?'0.1':'';
+ $('dimension').placeholder=c.kind==='pavement'?'e.g. 6':c.kind==='dimension'?'e.g. 1.2 x 1.0 m':'';
+ if(resetOptions){
+  let values=c.o.slice();
+  if(c.mode==='landmark')values=['Hospital','School','Pagoda','Market','Custom'];
+  if(c.custom||c.o.includes('Custom'))values=values.filter(v=>v!=='Custom').concat('Custom');
+  $('v').innerHTML=values.map(v=>`<option value="${esc(v)}">${esc(c.kind==='pavement'?pavementListName(v):v)}</option>`).join('')
+ }
+ const freeCustomValue=c.kind==='boundary'||c.mode!=='landmark'&&(c.custom||c.o.includes('Custom'));
+ $('vOtherLabel').classList.toggle('hide',!freeCustomValue);
+ $('vOtherLabel').textContent=c.kind==='boundary'?'Value':['ex_drain','ds_drain'].includes(key)?'Side drain name':'Custom value';
+ $('vOther').placeholder=c.kind==='boundary'?'Enter boundary/location name':'';
+ $('vOther').classList.toggle('hide',c.kind!=='boundary'&&($('v').value!=='Custom'||!freeCustomValue));
+ drawItems()
+}
+$('group').onchange=()=>populateCategories();
+$('cat').onchange=()=>{sel(true);draw()};
+$('v').onchange=()=>sel();
+$('customMode').onchange=()=>{$('eW').classList.toggle('hide',$('customMode').value==='point');updatePastePlaceholder()};
+$('landmarkMajor').onchange=()=>{if($('landmarkMajor').checked)$('landmarkMinor').checked=false;else if(!$('landmarkMinor').checked)$('landmarkMajor').checked=true};
+$('landmarkMinor').onchange=()=>{if($('landmarkMinor').checked)$('landmarkMajor').checked=false;else if(!$('landmarkMajor').checked)$('landmarkMajor').checked=true};
+renderPointLabelControls();$('group').value='Existing';populateCategories();$('cat').value='ex_settlement';sel(true);
+$('add').onclick=()=>{
+ const c=$('cat').value,cfg=C[c];let value=cfg.kind==='boundary'?$('vOther').value.trim():$('v').value,dim=cfg.kind==='dimension'?$('dimension').value.trim():'',roadWidth=cfg.kind==='pavement'?String($('dimension').value).trim():'',sym='',importance=$('landmarkMinor').checked?'Minor':'Major';
+ const customSelected=cfg.kind!=='boundary'&&value==='Custom';
+ if(customSelected&&cfg.mode==='landmark'){
+  value=$('landmarkName').value.trim();if(!value){$('msg').textContent='Enter a landmark name';return}
+  const file=$('landmarkSymbol').files[0];
+  if(file&&file.size>500000){$('msg').textContent='Custom symbol must be smaller than 500 KB';return}
+ }else if(customSelected){
+  value=$('vOther').value.trim();if(!value){$('msg').textContent='Enter a custom value';return}
+  if(cfg.kind==='dimension'&&['ex_drain','ds_drain'].includes(c)){
+   const file=$('drainSymbol').files[0];
+   if(file&&file.size>500000){$('msg').textContent='Custom symbol must be smaller than 500 KB';return}
+   if(file)sym=file.name
+  }
+ }
+ if(cfg.mode==='landmark'){
+  if(!customSelected){const image=landmarkSymbols[value]&&landmarkSymbols[value][importance];if(image)sym=`symbols/${image}`}
+ }else if(sym&&!sym.startsWith('data:'))sym=`symbols/${encodeURIComponent(sym).replace(/%20/g,'%20')}`;
+ if(cfg.kind==='pavement'&&roadWidth&&(!Number.isFinite(Number(roadWidth))||Number(roadWidth)<=0)){$('msg').textContent='Road width must be a positive number';return}
+ const file=customSelected&&cfg.mode==='landmark'?$('landmarkSymbol').files[0]:customSelected&&['ex_drain','ds_drain'].includes(c)?$('drainSymbol').files[0]:null;
+ const add=symbol=>{const result=addItem(c,parse($('s').value),parse($('e').value),value,dim,symbol,roadWidth,importance);$('msg').textContent=result;if(!result){clearEntry();draw()}};
+ if(file){
+  if(file.size>500000){$('msg').textContent='Custom symbol must be smaller than 500 KB';return}
+  $('msg').textContent='Reading custom symbol…';const reader=new FileReader();reader.onload=()=>add(String(reader.result));reader.onerror=()=>{$('msg').textContent='Unable to read the selected symbol file'};reader.readAsDataURL(file);return
+ }
+ add(sym)
+};
+function clearEntry(){$('s').value=isRange($('cat').value,$('v').value)?$('e').value:'';$('e').value='';$('dimension').value='';$('vOther').value='';$('landmarkName').value='';$('landmarkSymbol').value='';$('drainSymbol').value='';if($('v').value==='Custom')$('v').selectedIndex=0;$('s').focus();sel()}
+[$('s'),$('e'),$('v'),$('vOther'),$('dimension'),$('landmarkName')].forEach(field=>field.addEventListener('keydown',event=>{if(event.key==='Enter'&&!$('add').classList.contains('hide')){event.preventDefault();$('add').click()}}));
+function importPastedRows(text){
+ const rows=text.split(/\r?\n/).map(line=>line.split('\t'));
+ while(rows.length&&!rows[rows.length-1].some(cell=>cell.trim()))rows.pop();
+ if(!rows.length)return{added:0,errors:['Paste tab-separated Excel cells first']};
+ const aliases={
+  start:['start','start station','station'],end:['end','end station'],
+  value:['value','type','label'],dimension:['dimension','dimension (optional)','dim'],
+  width:['road width','road width (metres)','road width (meters)','width'],importance:['importance','major/minor']
+ };
+ const normalize=value=>String(value||'').trim().toLowerCase();
+ const first=rows[0].map(normalize),columns={};
+ Object.keys(aliases).forEach(name=>columns[name]=first.findIndex(value=>aliases[name].includes(value)));
+ const hasHeaders=columns.start>=0&&columns.value>=0;
+ const key=$('cat').value,cfg=C[key];
+ if(!cfg)return{added:0,errors:['Select a category before importing pasted rows']};
+ if(key==='__custom')return{added:0,errors:['Select a category, not Custom, before importing pasted rows']};
+ if(!hasHeaders){
+  const point=cfg.mode==='point'||cfg.mode==='landmark';
+  columns.start=0;columns.end=point?-1:1;columns.value=point?1:2;columns.dimension=point?2:3;columns.width=point?3:4;columns.importance=point?4:5
+ }
+ const data=hasHeaders?rows.slice(1):rows,pointRows=cfg.mode==='point'||cfg.mode==='landmark'||(hasHeaders&&columns.end<0);
+ let added=0;const errors=[];
+ data.forEach((row,index)=>{
+  if(!row.some(cell=>cell.trim()))return;
+  const rowNumber=index+(hasHeaders?2:1),cell=name=>columns[name]<0?'':String(row[columns[name]]||'').trim();
+  const start=parse(cell('start')),end=parse(cell('end'));
+  let value=cell('value'),dimension=cell('dimension'),roadWidth=cell('width')||(cfg.kind==='pavement'?dimension:'');
+  if(!value){errors.push(`Row ${rowNumber}: missing Value`);return}
+  if(cfg.mode==='range'&&/^[-+]?\d+(?:\.\d+)?$/.test(value)){
+   const unit=cfg.o[0]?.match(/^\s*[-+]?\d+(?:\.\d+)?\s*(.+?)\s*$/)?.[1];
+   if(unit)value=`${value} ${unit}`
+  }
+  const option=cfg.o.find(item=>item.toLowerCase()===value.toLowerCase());
+  if(option)value=option;
+  let importance=/^minor$/i.test(cell('importance'))?'Minor':'Major',symbol='';
+  if(cfg.mode==='landmark'){
+   const match=value.match(/^(.+?)\s*\((Major|Minor)\)$/i);
+   if(match){value=match[1];importance=match[2][0].toUpperCase()+match[2].slice(1)}
+   symbol=landmarkSymbols[value]?.[importance]?`symbols/${landmarkSymbols[value][importance]}`:''
+  }
+  const range=cfg.kind==='boundary'||!pointRows&&(cfg.mode==='range'||(cfg.mode==='mixed'&&!Number.isNaN(end)));
+  if(range&&Number.isNaN(end)){errors.push(`Row ${rowNumber}: missing or invalid End station`);return}
+  if(cfg.kind==='pavement'&&roadWidth&&(!Number.isFinite(Number(roadWidth))||Number(roadWidth)<=0)){errors.push(`Row ${rowNumber}: Road Width must be a positive number`);return}
+  const result=addItem(key,start,range?end:NaN,value,cfg.kind==='pavement'?'':dimension,symbol,roadWidth,importance,!range);
+  if(result)errors.push(`Row ${rowNumber}: ${result}`);else added++
+ });
+ if(added)draw();
+ return{added,errors}
+}
+function exportPages(){
+ draw();const source=$('bd').querySelector('svg'),header=$('hd').querySelector('svg'),width=Number(source.getAttribute('width')),height=Number(source.getAttribute('height')),slice=EXPORT_PAGE_WIDTH,total=Math.max(1,Math.ceil((width-10)/slice));
+ $('printPages').innerHTML='';
+ for(let page=0;page<total;page++){
+  const wrap=document.createElement('section');wrap.className='printPage';
+  const chart=document.createElement('div');chart.className='printChart';
+  const left=header.cloneNode(true),right=source.cloneNode(true);
+  left.setAttribute('width',header.getAttribute('width'));left.setAttribute('height',height);
+  right.setAttribute('width',slice);right.setAttribute('height',height);right.setAttribute('viewBox',`${page*slice} 0 ${slice} ${height}`);
+  const legend=right.querySelector('.diagram-legend');if(legend&&page)legend.setAttribute('transform',`translate(${page*slice} 0)`);
+  chart.append(left,right);wrap.append(chart);
+  const number=document.createElement('div');number.className='printNumber';number.textContent=`Page ${page+1} of ${total}`;wrap.append(number);
+  $('printPages').append(wrap)
+ }
+ return total
+}
+const decodedSymbols=new Map();
+async function inlineSymbol(name){
+ if(name.startsWith('data:'))return name;
+ const file=decodeURIComponent(name.startsWith('symbols/')?name.slice(8):name);
+ if(decodedSymbols.has(file))return decodedSymbols.get(file);
+ const response=await fetch(new URL(`symbols/${encodeURIComponent(file)}`,location.href),{cache:'no-store'});
+ if(!response.ok)throw Error(`Unable to load symbol for JPG export: ${file}`);
+ const svg=await response.text(),uri=`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+ decodedSymbols.set(file,uri);return uri
+}
+async function standaloneSvg(svg){
+ const clone=svg.cloneNode(true);clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+ clone.innerHTML=clone.innerHTML.replace(/var\(--ln\)/g,'#d1d5db').replace(/var\(--bl\)/g,'#1d4ed8').replace(/var\(--mu\)/g,'#6b7280').replace(/var\(--tx\)/g,'#111827').replace(/var\(--card\)/g,'#ffffff');
+ await Promise.all([...clone.querySelectorAll('image')].map(async image=>{const href=image.getAttribute('href');if(href&&!href.startsWith('data:'))image.setAttribute('href',await inlineSymbol(href))}));
+ return new XMLSerializer().serializeToString(clone)
+}
+$('imp').onclick=()=>{
+ const result=importPastedRows($('excelPaste').value),summary=[`${result.added} item(s) added`];
+ if(result.errors.length)summary.push(result.errors.join('; '));
+ $('msg').textContent=summary.join(' · ')
+};
+$('pdf').onclick=()=>{
+ exportPages();const base=($('title').value||'Road').trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g,'-').replace(/[. ]+$/g,'')||'Road';
+ const oldTitle=document.title;document.title=`${base}_Diagram_Page1`;
+ window.addEventListener('afterprint',()=>{document.title=oldTitle},{once:true});window.print()
+};
+$('jpg').onclick=async()=>{
+ const count=exportPages(),pages=[...$('printPages').children],roadName=($('title').value||'Road').trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g,'-').replace(/[. ]+$/g,'')||'Road',base=`${roadName}_Diagram`;
+ decodedSymbols.clear();
+ $('msg').textContent='Preparing JPG export…';
+ try{
+  for(let i=0;i<count;i++){
+   const svgs=await Promise.all([...pages[i].querySelectorAll('svg')].map(standaloneSvg)),imgs=await Promise.all(svgs.map(source=>new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(new Blob([source],{type:'image/svg+xml'}));img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Unable to render a symbol for JPG export'))};img.src=url})));
+   const height=imgs[0].height,width=imgs.reduce((sum,img)=>sum+img.width,0),canvas=document.createElement('canvas');canvas.width=width*2;canvas.height=(height+36)*2;
+   const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);let x=0;
+   imgs.forEach(img=>{ctx.drawImage(img,x,0,img.width*2,height*2);x+=img.width*2});
+   ctx.fillStyle='#111';ctx.font='24px sans-serif';ctx.textAlign='center';ctx.fillText(`Page ${i+1} of ${count}`,canvas.width/2,canvas.height-12);
+   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.92));if(!blob)throw Error('Could not create JPG image');
+   const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`${base}_Page${i+1}.jpg`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000)
+  }
+  $('msg').textContent=`Exported ${count} JPG page(s)`
+ }catch(e){$('msg').textContent='JPG export failed: '+e.message}
+};
+$('tb').onclick=e=>{const i=e.target.dataset.i;if(i!=null){D.splice(+i,1);draw()}};
+$('clr').onclick=()=>{const c=$('cat').value;if(!C[c])return;if(confirm('Clear all items in '+C[c].n+'?')){D=D.filter(d=>d.c!==c&&!(c==='ex_pavement'&&d.c==='ex_width')&&!(c==='ds_pavement'&&d.c==='ds_width'));draw()}};
+$('customAdd').onclick=()=>{
+ const name=$('customName').value.trim(),group=$('group').value;
+ if(group==='Boundary'){$('msg').textContent='Use the Boundary value field to name a station range';return}
+ if(!name){$('msg').textContent='Enter a custom category name';return}
+ if(K().some(k=>C[k].group===group&&C[k].n.toLowerCase()===name.toLowerCase())){$('msg').textContent='That category already exists in '+group;return}
+ const base='custom_'+Date.now().toString(36);let id=base,suffix=1;
+ while(C[id])id=`${base}_${suffix++}`;
+ const category={id,name,group,mode:$('customMode').value};
+ customCategories.push(category);C[id]={...category,n:name,o:[],custom:true};save();
+ renderPointLabelControls();$('customName').value='';populateCategories(id);$('msg').textContent='';draw()
+};
+$('rst').onclick=()=>{sample();draw()};
+$('scale').oninput=draw;$('title').oninput=draw;
+draw();
+</script></body></html>

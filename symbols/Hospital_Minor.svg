@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 45.5 45.5">
+  <defs>
+    <style>
+      .cls-1{fill:none;stroke:#000000;stroke-width:2;stroke-miterlimit:10}
+      .cls-2{fill:#ffffff;stroke:#e9191e;stroke-width:8;stroke-miterlimit:10}
+    </style>
+  </defs>
+  <title>Asset 10</title>
+  <g id="Asset_10" data-name="Asset 10">
+    <path d="M4 22.75 C4 12.395 12.395 4 22.75 4 C33.105 4 41.5 12.395 41.5 22.75 C41.5 33.105 33.105 41.5 22.75 41.5 C12.395 41.5 4 33.105 4 22.75 Z" class="cls-1"/>
+    <path d="M4 22.75 L41.5 22.75" class="cls-2"/>
+    <path d="M22.75 4 L22.75 41.5" class="cls-2"/>
+  </g>
+</svg>
