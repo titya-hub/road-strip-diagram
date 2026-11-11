@@ -336,7 +336,7 @@ function legendEntries(){
   if(cfg.kind==='fwd'){
    if(!hasFwdLegend){
     hasFwdLegend=true;
-    [['FWD Pass','#16a34a','solid'],['FWD Fail','#dc2626','solid'],['FWD Base Line','#dc2626','dashed']].forEach(([label,color,lineStyle],index)=>entries.push({key:`rh_fwd:legend:${index}`,label,width:36+label.length*5.7,chartLine:true,lineColor:color,lineStyle,cluster:4,group:cfg.group,name:cfg.n,value:label}));
+    [['FWD Pass','#16a34a','solid'],['FWD Fail','#dc2626','solid'],['FWD Base Line','#808080','dashed']].forEach(([label,color,lineStyle],index)=>entries.push({key:`rh_fwd:legend:${index}`,label,width:36+label.length*5.7,chartLine:true,lineColor:color,lineStyle,cluster:4,group:cfg.group,name:cfg.n,value:label}));
    }
    return
   }
@@ -370,8 +370,8 @@ function sideDrainLines(x1,x2,y,color,style,scale=1){
  }
  return svg
 }
-function verticalLabel(text,x,y,options={}){
- const rotation=options.rotation===false?'':` transform="rotate(-90 ${x} ${y})"`,className=options.id?` class="drag-label" data-label-id="${esc(options.id)}" data-vertical="true"`:'',size=options.size||9,anchor=options.anchor||'middle';
+function diagramLabel(text,x,y,options={}){
+ const vertical=options.vertical===true,rotation=vertical?` transform="rotate(-90 ${x} ${y})"`:'',className=options.id?` class="drag-label" data-label-id="${esc(options.id)}" data-vertical="${vertical}"`:'',size=options.size||9,anchor=options.anchor||'middle';
  return`<text${className}${options.id?` data-base-x="${x}" data-base-y="${y}"`:''}${rotation} x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" font-size="${size}" style="fill:${options.fill||'var(--tx)'}">${esc(text)}</text>`
 }
 function draw(){
@@ -411,23 +411,23 @@ function draw(){
       const widthLabel=String(segment.width).replace(/\s*m\s*$/i,'').trim(),label=`${normalizePavement(d.v)}${widthLabel?`, ${widthLabel}m`:''}`;
       const top=Y-thickness/2;
       b+=`<rect x="${start}" y="${top}" width="${Math.max(1,end-start)}" height="${thickness}" fill="${f}" stroke="${ink(f)}" stroke-width="1.5"><title>${esc(label)}: ${fmt(segment.s)} – ${fmt(segment.e)}</title></rect>`;
-      if(end-start>24)b+=verticalLabel(label,(start+end)/2,Y,{size:9,fill:ink(f)})
+      if(end-start>24)b+=diagramLabel(label,(start+end)/2,Y,{size:9,fill:ink(f)})
      })
     }else if(k==='boundary'){
      const end=x(d.e),center=(X+end)/2,label=String(d.v||''),lineY=Y+7,textWidth=Math.min(end-X-8,Math.max(14,label.length*6+8)),half=Math.max(7,textWidth/2);
      b+=`<line x1="${X}" x2="${end}" y1="${lineY}" y2="${lineY}" stroke="#374151" stroke-width="1.5"><title>${esc(label)}: ${fmt(d.s)} – ${fmt(d.e)}</title></line>`;
      b+=`<line x1="${X}" x2="${X}" y1="${lineY-7}" y2="${lineY+7}" stroke="#374151" stroke-width="1.5"/><line x1="${end}" x2="${end}" y1="${lineY-7}" y2="${lineY+7}" stroke="#374151" stroke-width="1.5"/>`;
      b+=`<path d="M${X} ${lineY}l7 -3v6z M${end} ${lineY}l-7 -3v6z" fill="#374151"/>`;
-     b+=`<rect x="${center-7}" y="${lineY-half}" width="14" height="${half*2}" fill="var(--card)"/>${verticalLabel(label,center,lineY,{size:10})}`
+     b+=`<rect x="${center-7}" y="${lineY-half}" width="14" height="${half*2}" fill="var(--card)"/>${diagramLabel(label,center,lineY,{size:10})}`
     }else if(cfg.kind==='fwd'){
      const toY=value=>r.y+r.h-16-(value-r.fwdScale.min)/(r.fwdScale.max-r.fwdScale.min||1)*(r.h-32),measured=Number.parseFloat(d.v),baseline=Number.parseFloat(d.dim),end=x(d.e);
      const measuredY=toY(measured),baselineY=toY(baseline),color=Number.isFinite(baseline)?measured>=baseline?'#16a34a':'#dc2626':'#2563eb',status=Number.isFinite(baseline)?measured>=baseline?'Pass':'Fail':'';
-     if(Number.isFinite(baseline))b+=`<line x1="${X}" x2="${end}" y1="${baselineY}" y2="${baselineY}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="7 4"><title>Base Line ${esc(d.dim)}: ${fmt(d.s)} – ${fmt(d.e)}</title></line>`;
+     if(Number.isFinite(baseline))b+=`<line x1="${X}" x2="${end}" y1="${baselineY}" y2="${baselineY}" stroke="#808080" stroke-width="1.5" stroke-dasharray="7 4"><title>Base Line ${esc(d.dim)}: ${fmt(d.s)} – ${fmt(d.e)}</title></line>`;
      b+=`<line x1="${X}" x2="${end}" y1="${measuredY}" y2="${measuredY}" stroke="${color}" stroke-width="2.5"><title>FWD ${esc(d.v)}${status?' · '+status:''}: ${fmt(d.s)} – ${fmt(d.e)}</title></line>`;
      const prior=D.find(item=>item.c===k&&item.e===d.s);
-     if(prior)b+=`<line x1="${X}" x2="${X}" y1="${toY(Number.parseFloat(prior.v))}" y2="${measuredY}" stroke="${color}" stroke-width="2.5"/>`;
-     b+=verticalLabel(d.v,(X+end)/2,measuredY-7,{size:8});
-     if(Number.isFinite(baseline))b+=verticalLabel(`Base ${d.dim}`,(X+end)/2,baselineY+7,{size:8,fill:'#dc2626'});
+     if(prior)b+=`<line x1="${X}" x2="${X}" y1="${toY(Number.parseFloat(prior.v))}" y2="${measuredY}" stroke="#808080" stroke-width="2.5"/>`;
+     b+=diagramLabel(d.v,(X+end)/2,measuredY-7,{size:8});
+     if(Number.isFinite(baseline))b+=diagramLabel(`Base ${d.dim}`,(X+end)/2,baselineY+7,{size:8,fill:'#808080'});
     }else if(isDrainCategory(k)){
      const drainColor=drainColorForCategory(k),drainStyle=sideDrainStyle(d.v);
      const sides=d.side==='BS'?[-9,9]:[d.side==='RHS'?9:-9],sideName=d.side||'LHS';
@@ -437,20 +437,20 @@ function draw(){
      if(valueLabelsEnabled(k)&&d.dim&&!r.layout.omitted?.has(d._id)){
       const labelX=X+w/2+(lane?12:-12),offset=settings.labelOffsets[`${d._id}:dimension`]||{x:0,y:0},sideY=d.side==='RHS'?Y+20:Y-18,labelY=sideY;
       if(lane>0)b+=`<line x1="${X+w/2}" y1="${Y+(d.side==='RHS'?9:-9)}" x2="${labelX+(offset.x||0)}" y2="${labelY+(offset.y||0)}" stroke="var(--mu)" stroke-width=".7"/>`;
-      b+=verticalLabel(d.dim,labelX+(offset.x||0),labelY+(offset.y||0),{id:`${d._id}:dimension`,size:9});
+      b+=diagramLabel(d.dim,labelX+(offset.x||0),labelY+(offset.y||0),{id:`${d._id}:dimension`,size:9});
      }
      if(stationLabelsEnabled(k)&&!r.layout.omitted?.has(d._id)){
       const labelX=X+(lane?12:-12),labelY=r.y+r.h-9,offset=settings.labelOffsets[`${d._id}:station`]||{x:0,y:0},stationY=labelY+(offset.y||0);
       if(lane>0)b+=`<line x1="${X}" y1="${Y+(d.side==='RHS'?9:-9)}" x2="${labelX+(offset.x||0)}" y2="${stationY-5}" stroke="var(--mu)" stroke-width=".7"/>`;
-      b+=verticalLabel(fmt(d.s),labelX+(offset.x||0),stationY,{id:`${d._id}:station`,size:8})
+      b+=diagramLabel(fmt(d.s),labelX+(offset.x||0),stationY,{id:`${d._id}:station`,size:8,vertical:true})
      }
     }else{
      b+=`<rect x="${X}" y="${r.y+6}" width="${w}" height="${r.h-12}" fill="${f}" stroke="#0003" stroke-width=".5"><title>${esc(d.v)}: ${fmt(d.s)} – ${fmt(d.e)}</title></rect>`;
      if(k==='ex_settlement'){
       const landmarks=D.filter(item=>item.c==='ex_landmark'&&item.s>=d.s&&item.s<=d.e),center=X+w/2;
       const collision=landmarks.some(item=>Math.abs(x(item.s)-center)<32),labelX=collision?(x(landmarks[0].s)<center?X+w*.72:X+w*.28):center;
-      if(w>32)b+=verticalLabel(d.v,labelX,Y,{size:10,fill:ink(f)})
-     }else if(w>d.v.length*6+8)b+=verticalLabel(d.v,X+w/2,Y,{size:10,fill:ink(f)})
+      if(w>32)b+=diagramLabel(d.v,labelX,Y,{size:10,fill:ink(f)})
+     }else if(w>d.v.length*6+8)b+=diagramLabel(d.v,X+w/2,Y,{size:10,fill:ink(f)})
     }
    }else{
        const symbol=symbolForItem(d),href=symbol&&(symbol.startsWith('data:')?symbol:symbol.startsWith('symbols/')?symbol:`symbols/${encodeURIComponent(symbol).replace(/%20/g,'%20')}`),structure=d.c==='ex_structure'||d.c==='ds_structure',landmark=d.c==='ex_landmark',symbolWidth=href?(structure?20:12):6,symbolHeight=href?(structure?21:15):6,valueEnabled=valueLabelsEnabled(d.c),stationEnabled=stationLabelsEnabled(d.c),laneCount=r.layout.count,iconY=r.y+(valueEnabled?25+Math.max(0,laneCount-1)*11:16);
@@ -461,12 +461,12 @@ function draw(){
         const labelY=r.y+10,offset=settings.labelOffsets[`${d._id}:value`]||{x:0,y:0};
         const labelX=X+(lane?12:-12)+(offset.x||0),labelYWithOffset=labelY+(offset.y||0);
         if(lane>0)b+=`<line x1="${X}" y1="${iconY}" x2="${labelX}" y2="${labelYWithOffset+5}" stroke="var(--mu)" stroke-width=".7"/>`;
-        b+=verticalLabel(pointLabel,labelX,labelYWithOffset,{id:`${d._id}:value`,size:9})
+        b+=diagramLabel(pointLabel,labelX,labelYWithOffset,{id:`${d._id}:value`,size:9,vertical:structure})
        }
        if(stationEnabled&&!r.layout.omitted?.has(d._id)){
         const labelY=r.y+r.h-6,offset=settings.labelOffsets[`${d._id}:station`]||{x:0,y:0},labelX=X+(lane?12:-12)+(offset.x||0),labelYWithOffset=labelY+(offset.y||0);
         if(lane>0)b+=`<line x1="${X}" y1="${iconY}" x2="${labelX}" y2="${labelYWithOffset-5}" stroke="var(--mu)" stroke-width=".7"/>`;
-        b+=verticalLabel(fmt(d.s),labelX,labelYWithOffset,{id:`${d._id}:station`,size:8})
+        b+=diagramLabel(fmt(d.s),labelX,labelYWithOffset,{id:`${d._id}:station`,size:8,vertical:structure})
        }
    }})});
  b+=`<g class="diagram-legend"><text class="legend-title" x="16" y="${legendTop+26}">Legend</text>`;
