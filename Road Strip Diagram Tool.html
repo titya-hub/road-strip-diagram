@@ -10,6 +10,20 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.menubar{display:flex;gap:2px;align-items:center;padding:4px 12px;background:var(--card);border-bottom:1px solid var(--ln);position:sticky;top:0;z-index:5}
+.menu{position:relative}
+.menu summary{list-style:none;cursor:pointer;padding:6px 10px;border-radius:5px}
+.menu summary::-webkit-details-marker{display:none}
+.menu[open] summary,.menu summary:hover{background:var(--bg)}
+.menu-panel{position:absolute;top:100%;left:0;z-index:6;min-width:190px;padding:5px;background:var(--card);border:1px solid var(--ln);border-radius:7px;box-shadow:0 6px 18px #0002}
+.menu-item{display:block;width:100%;text-align:left;color:var(--tx);background:transparent;padding:7px 9px;margin:0;border-radius:4px;text-decoration:none}
+.menu-item:hover{background:var(--bg)}
+dialog{max-width:min(440px,calc(100vw - 32px));border:1px solid var(--ln);border-radius:10px;padding:18px;background:var(--card);color:var(--tx)}
+dialog::backdrop{background:#0007}
+dialog h2{margin-top:0}
+.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.dialog-actions button{width:auto;min-width:84px;padding:7px 12px}
+.dialog-actions .secondary{background:var(--bg);color:var(--tx);border:1px solid var(--ln)}
 .app{display:flex;gap:12px;padding:12px;align-items:flex-start}
 .panel{width:330px;flex:none;background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:12px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
 .view{flex:1;min-width:0;background:var(--card);border:1px solid var(--ln);border-radius:10px;overflow:auto;max-height:calc(100vh - 24px)}
@@ -32,8 +46,10 @@ svg text{fill:var(--tx);font-family:inherit}
 .hide{display:none!important}
 .footer{text-align:right;color:var(--mu);font-size:12px;padding:4px 12px 12px}
 .hint{font-size:11px;color:var(--mu);margin:4px 0;white-space:pre-wrap;font-family:inherit}
-.point-label-option{display:flex;align-items:center;gap:6px;padding:2px 0}
-.point-label-option input{flex:none}
+.point-label-category{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--ln);font-size:11px}
+.point-label-category>span{flex:1}
+.point-label-category label{display:flex;align-items:center;gap:3px;margin:0}
+.point-label-category input{flex:none}
 .drag-label{cursor:move;touch-action:none;user-select:none}
 .legend-title{font-size:12px;font-weight:700}
 #printPages{display:none}
@@ -42,7 +58,7 @@ svg text{fill:var(--tx);font-family:inherit}
 @media print{
  body{background:#fff;color:#111}
  #printPages{--tx:#111}
- .panel,.view,.footer{display:none!important}
+ .menubar,.panel,.view,.footer{display:none!important}
  .app{display:none}
  #printPages{display:block}
  .printPage{height:277mm;position:relative;page-break-after:always;break-after:page;overflow:hidden}
@@ -52,12 +68,32 @@ svg text{fill:var(--tx);font-family:inherit}
  .printNumber{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:10pt}
 }
 </style></head><body>
+<nav class="menubar" aria-label="Main menu">
+ <details class="menu"><summary>File</summary><div class="menu-panel" role="menu">
+  <button class="menu-item" type="button" id="loadProjectBtn" role="menuitem">Load Project...</button>
+  <button class="menu-item" type="button" id="saveProjectBtn" role="menuitem">Save Project</button>
+  <button class="menu-item" type="button" id="settingsBtn" role="menuitem">Settings...</button>
+ </div></details>
+ <details class="menu"><summary>View</summary><div class="menu-panel" role="menu">
+  <button class="menu-item" type="button" id="resetZoomBtn" role="menuitem">Reset Zoom</button>
+  <button class="menu-item" type="button" id="showLabelsBtn" role="menuitem">Point Labels...</button>
+ </div></details>
+ <details class="menu"><summary>Export</summary><div class="menu-panel" role="menu">
+  <button class="menu-item" type="button" id="pdf" role="menuitem">Export PDF...</button>
+  <button class="menu-item" type="button" id="jpg" role="menuitem">Export JPG</button>
+ </div></details>
+ <details class="menu"><summary>Help</summary><div class="menu-panel" role="menu">
+  <button class="menu-item" type="button" id="gettingStartedBtn" role="menuitem">Getting Started</button>
+  <a class="menu-item" role="menuitem" href="https://github.com/titya-hub/road-strip-diagram/issues" target="_blank" rel="noopener">Report Issues</a>
+  <button class="menu-item" type="button" id="aboutBtn" role="menuitem">About</button>
+ </div></details>
+</nav>
 <div class="app">
 <div class="panel">
 <h1>Road Strip Diagram</h1>
 <h2>1. INPUT</h2>
 <label>Road Name/Number</label><input id="title" value="PR 2718">
-<label>Main category</label><select id="group"><option>Boundary</option><option>Existing</option><option>Design</option></select>
+<label>Main category</label><select id="group"><option>Information</option><option>Existing</option><option>Design</option><option>Road Health</option></select>
 <div id="categoryField"><label>Category</label><select id="cat"></select></div>
 <div id="customCategory" class="hide">
  <label>New category name</label><input id="customName" placeholder="e.g. Drainage">
@@ -68,6 +104,7 @@ svg text{fill:var(--tx);font-family:inherit}
 <div id="eW"><label>End station</label><input id="e" placeholder="15+000"></div></div>
 <label id="vL">Value</label><select id="v"></select>
 <label id="vOtherLabel" class="hide">Custom value</label><input id="vOther" class="hide">
+<div id="drainSideBox" class="hide"><label for="drainSide">Side of road</label><select id="drainSide"><option value="LHS">LHS — Left hand side</option><option value="RHS">RHS — Right hand side</option><option value="BS">BS — Both sides</option></select></div>
 <div id="landmarkFields" class="hide">
  <label>Importance</label><div class="r"><label><input id="landmarkMajor" type="checkbox" checked> Major</label><label><input id="landmarkMinor" type="checkbox"> Minor</label></div>
  <div id="landmarkCustom" class="hide">
@@ -81,7 +118,7 @@ svg text{fill:var(--tx);font-family:inherit}
 </div>
 <button id="add">Add to diagram</button><div id="msg"></div>
 <h3>Paste from Excel</h3>
-<label for="excelPaste">Copy the rows for one category from Excel and paste them here.</label>
+<label id="excelPasteHelp" for="excelPaste">Copy the rows for one category from Excel and paste them here.</label>
 <textarea id="excelPaste"></textarea>
 <button class="s" id="imp">Add pasted rows</button>
 <h2>2. VIEW</h2>
@@ -90,18 +127,34 @@ svg text{fill:var(--tx);font-family:inherit}
 <h3>Labels</h3>
 <div id="pointLabels"></div>
 <p class="hint">Drag diagram labels to reposition them.</p>
-<button class="s" id="rst">Reset sample</button>
+<button class="s" id="rst">Reset to empty</button>
 <h2>Items <span id="cnt"></span></h2>
 <div class="list"><table id="tb"></table></div>
 <button class="s" id="clr">Clear selected category</button>
-<h2>3. EXPORT</h2>
-<div class="r"><button class="s" id="pdf">PDF</button><button class="s" id="jpg">JPG</button></div>
-<p class="hint">PDF opens the print dialog (A3 landscape); choose Save as PDF.</p>
 </div>
 <div class="view" id="view"><div class="fl"><div class="hd" id="hd"></div><div id="bd"></div></div></div>
 </div>
 <div class="footer">By Mr.SOPHAL Ratitya</div>
 <div id="printPages"></div>
+<input id="projectFile" type="file" accept=".json,application/json" class="hide">
+<dialog id="resetDialog">
+ <h2>Reset diagram</h2><p>Clear all diagram data? Choose Save to download the current project before clearing.</p>
+ <div class="dialog-actions"><button type="button" class="secondary" id="resetCancel">Cancel</button><button type="button" class="secondary" id="resetOk">OK</button><button type="button" id="resetSave">Save</button></div>
+</dialog>
+<dialog id="settingsDialog">
+ <h2>Settings</h2>
+ <label for="settingsTheme">Theme</label><select id="settingsTheme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
+ <label for="settingsScale">Diagram scale: <span id="settingsScaleValue"></span> m per pixel</label><input id="settingsScale" type="range" min="2" max="200">
+ <div class="dialog-actions"><button type="button" class="secondary" id="settingsCancel">Cancel</button><button type="button" id="settingsApply">Apply</button></div>
+</dialog>
+<dialog id="gettingStartedDialog">
+ <h2>Getting Started</h2><p>Choose a category, enter its station range or point value, then add it to the diagram. Use the Labels checkboxes to control value and station text.</p><p>Use File → Save Project to download an editable JSON file, or File → Load Project to continue later. Export PDF opens the print dialog; Export JPG downloads page images.</p>
+ <div class="dialog-actions"><button type="button" id="gettingStartedClose">Close</button></div>
+</dialog>
+<dialog id="aboutDialog">
+ <h2>Road Strip Diagram Tool</h2><p>Create and export road strip diagrams.</p><p>By Mr.SOPHAL Ratitya</p>
+ <div class="dialog-actions"><button type="button" id="aboutClose">Close</button></div>
+</dialog>
 <script>
 const $=i=>document.getElementById(i);
 const SYMBOL_GZIP={
@@ -126,7 +179,7 @@ const SYMBOL_GZIP={
  'Concrete Canal.svg':'H4sIAAAAAAAEAH1SyU7DMBC99ytG5hxv2YPTCg6cyg3OKDRuatV1qthqihD/jrMhEAhfPG/em8UzFpvrScNFdla1pkQMUwTS7NpamaZEz08PQYY265Wwlwa80tgSHZw7F4T0fY/7ELddQzillHgFmiTFVStz/EvI8jwnI4vgomR/315LRIFCRjFLGSQ4TBlarwBELfd2MLxp3ZuWkw2Ad9oG7H2vtC5Ma+StdV17lMUNpdWrrGcY9Kp2hyJe4Ek52Wnlr4LRj++p+J+phvNPrCBfPQmydCqcct53Z610wHNBJjwwDai6RCPzwnMEdeWqwFQnOTu9HM2PPVfuAF78yHEMIaZJDts0xYmfzogQ7HRl/RrGOSDyOyxLIMYZT2HLYhzmIVAcRxFseYojj2YuojiKkoWLfVgYL1wyxLGFm6uP3I/qfKouSOM/yLD/9eoTqhjLjE8CAAA=',
  'U Ditch.svg':'H4sIAAAAAAAEAG1UTY+bMBC951dY7jnGNh8GSrJqV+opubXnFQ1egpZAFGiSqup/r+2ZYdOqSIh5njdv3hhM9XQ/9exqL1M3DhuuhOTMDoex6YZ2w799/bLO+dN2VU3XljnmMG34cZ7PZRTdbjdxi8V4aSMtpYwcgwOlvPfd8PY/oiqKIgpZzq6dvX0e7xsumWS5FMoolvLtirGqsa+TD1w4zT97CzFj4tBPa/Xrtev7chgH+3GaL+ObLT9IWX+3DcL1rWvmY5kSdO3soT6Xl/HHsHBO3WwvfecepZK/H/U16DtNf0GqihYfVUTuqrmb3dqnabIz01kVAfaZlnXNhofMi844a+q5Xg/1yeKio3Mc8FzPR+bIey1S5u+dMSJze+Fizg59PbktD3PzCEta2o9/i5U2bJcLkyUIngshKS6EDutxqpY4Aw6AQsYs8OPABx2Id14fwmcttKZ1jWWatDQ2ABI0fve210roIiancSxyrchqnAhZ5IgciEPKiy0gQx4g3xiLwA3qkWXoRa7dl60M2ZbCBBvBOwEYgFCYAopwjEfv+yRzDBokzUVuChokLYRKKedAHFJebwEZ8gB5F1gE/lAPB4FWOIcD0tD2J6nIUxSgOEgT8E2xAuw82t4bJRJJ471/dqGPQ0VCb8Pk4XSC3gJCpwV5D1gE5lAPh8BeOIVDKqacka7YkAQBUCcUGkMRWnrw/tcx0csxiVo4r+5R+b/TdvUHHBmAju0EAAA='
 };
-const pavementColors={AC:'#333333',RC:'#52525b',CP:'#64748b',DBST:'#1f2937',SBST:'#475569',Laterite:'#c2410c',Unpave:'#d6a64f'};
+const pavementColors={AC:'#36454f',RC:'#8A9A5B',CP:'#64748b',DBST:'#A9A9A9',SBST:'#475569',Laterite:'#c2410c',Unpave:'#d6a64f'};
 const pavementNames={AC:'Asphalt Concrete',RC:'Reinforced Concrete',CP:'Composite Pavement',DBST:'Double Bituminous Treatment Surface',SBST:'Single Bituminous Treatment Surface',Laterite:'Laterite',Unpave:'Unpaved'};
 function normalizePavement(value){
  const text=String(value||'').trim();
@@ -136,24 +189,37 @@ function normalizePavement(value){
 function pavementListName(value){const code=normalizePavement(value);return pavementNames[code]?`${code} - ${pavementNames[code]}`:code}
 const landmarkSymbols={Hospital:{Major:'Hospital_Major.svg',Minor:'Hospital_Minor.svg'},School:{Major:'School_Major.svg',Minor:'School_Minor.svg'},Pagoda:{Major:'Pagoda_Major.svg',Minor:'Pagoda_Minor.svg'},Market:{Major:'Market_Major.svg',Minor:'Market_Minor.svg'}};
 const C={
- ex_settlement:{n:'Settlement',group:'Existing',mode:'mixed',o:['Urban','Sub-Urban','Rural'],c:{Urban:'#4b5563','Sub-Urban':'#9ca3af',Rural:'#ffffff'}},
- ex_landmark:{n:'Landmark',group:'Existing',mode:'landmark',diagramHidden:true,o:['Hospital','School','Pagoda','Market','Custom'],symbols:{'Hospital (Major)':'Hospital_Major.svg','Hospital (Minor)':'Hospital_Minor.svg','School (Major)':'School_Major.svg','School (Minor)':'School_Minor.svg','Pagoda (Major)':'Pagoda_Major.svg','Pagoda (Minor)':'Pagoda_Minor.svg','Market (Major)':'Market_Major.svg','Market (Minor)':'Market_Minor.svg'}},
- ex_terrain:{n:'Terrain',group:'Existing',mode:'range',o:['Flat','Rolling','Mountainous'],c:{Flat:'#fde68a',Rolling:'#b45309',Mountainous:'#78350f'}},
+ boundary:{n:'Boundary',group:'Information',mode:'range',kind:'boundary',o:[]},
+ ex_settlement:{n:'Settlement',group:'Information',mode:'mixed',o:['Urban','Sub-Urban','Rural'],c:{Urban:'#4b5563','Sub-Urban':'#9ca3af',Rural:'#ffffff'}},
+ ex_landmark:{n:'Landmark',group:'Information',mode:'landmark',diagramHidden:true,o:['Hospital','School','Pagoda','Market','Custom'],symbols:{'Hospital (Major)':'Hospital_Major.svg','Hospital (Minor)':'Hospital_Minor.svg','School (Major)':'School_Major.svg','School (Minor)':'School_Minor.svg','Pagoda (Major)':'Pagoda_Major.svg','Pagoda (Minor)':'Pagoda_Minor.svg','Market (Major)':'Market_Major.svg','Market (Minor)':'Market_Minor.svg'}},
+ ex_terrain:{n:'Terrain',group:'Information',mode:'range',o:['Flat','Rolling','Mountainous'],c:{Flat:'#fde68a',Rolling:'#b45309',Mountainous:'#78350f'}},
+ info_construction:{n:'Construction',group:'Information',mode:'range',kind:'freeRange',freeValue:true,o:[]},
+ info_maintenance:{n:'Maintenance',group:'Information',mode:'range',kind:'freeRange',freeValue:true,o:[]},
  ex_pavement:{n:'Pavement',group:'Existing',mode:'range',kind:'pavement',o:['AC','RC','CP','DBST','SBST','Laterite','Unpave'],c:pavementColors},
  ex_width:{n:'Road Width',group:'Existing',mode:'range',kind:'width',hidden:true,o:[]},
  ex_structure:{n:'Structure',group:'Existing',mode:'point',kind:'dimension',o:['Bridge','Box Culvert','Pipe Culvert','Custom'],symbols:{Bridge:'Bridge_EX.svg','Box Culvert':'Box Culvert_EX.svg','Pipe Culvert':'Pipe Culvert_EX.svg'}},
- ex_drain:{n:'Side Drain',group:'Existing',mode:'range',kind:'dimension',o:['U-Ditch','Pipe Culvert','Box Culvert','Earth Canal','Rip Rap Canal','Concrete Canal','Custom'],symbols:{'U-Ditch':'U Ditch.svg','Pipe Culvert':'Pipe Culvert_SD.svg','Box Culvert':'Box Culvert_SD.svg','Earth Canal':'Earth Canal.svg','Rip Rap Canal':'Rip Rap Canal.svg','Concrete Canal':'Concrete Canal.svg'}},
+ ex_drain:{n:'Side Drain',group:'Existing',mode:'range',kind:'drain',o:['U-Ditch','Pipe Culvert','Box Culvert','Earth Canal','Rip Rap Canal','Concrete Canal','Custom'],symbols:{'U-Ditch':'U Ditch.svg','Pipe Culvert':'Pipe Culvert_SD.svg','Box Culvert':'Box Culvert_SD.svg','Earth Canal':'Earth Canal.svg','Rip Rap Canal':'Rip Rap Canal.svg','Concrete Canal':'Concrete Canal.svg'}},
  ds_speed:{n:'Speed',group:'Design',mode:'range',o:['20 km/h','30 km/h','40 km/h','50 km/h','60 km/h','70 km/h','80 km/h','90 km/h','100 km/h','120 km/h'],c:{'20 km/h':'#e0edfc','30 km/h':'#dceafb','40 km/h':'#d8e7fa','50 km/h':'#d3e4f9','60 km/h':'#cfe1f8','70 km/h':'#c5ddf7','80 km/h':'#bad8f5','90 km/h':'#aed2f2','100 km/h':'#a2ccef','120 km/h':'#93c5ed'}},
- boundary:{n:'Boundary',group:'Boundary',mode:'range',kind:'boundary',o:[]},
  ds_pavement:{n:'Pavement',group:'Design',mode:'range',kind:'pavement',o:['AC','RC','CP','DBST','SBST','Laterite','Unpave'],c:pavementColors},
  ds_width:{n:'Road Width',group:'Design',mode:'range',kind:'width',hidden:true,o:[]},
  ds_structure:{n:'Structure',group:'Design',mode:'point',kind:'dimension',o:['Bridge','Box Culvert','Pipe Culvert','Custom'],symbols:{Bridge:'Bridge_DS.svg','Box Culvert':'Box Culvert_DS.svg','Pipe Culvert':'Pipe Culvert_DS.svg'}},
- ds_drain:{n:'Side Drain',group:'Design',mode:'range',kind:'dimension',o:['U-Ditch','Pipe Culvert','Box Culvert','Earth Canal','Rip Rap Canal','Concrete Canal','Custom'],symbols:{'U-Ditch':'U Ditch.svg','Pipe Culvert':'Pipe Culvert_SD.svg','Box Culvert':'Box Culvert_SD.svg','Earth Canal':'Earth Canal.svg','Rip Rap Canal':'Rip Rap Canal.svg','Concrete Canal':'Concrete Canal.svg'}}
+ ds_drain:{n:'Side Drain',group:'Design',mode:'range',kind:'drain',o:['U-Ditch','Pipe Culvert','Box Culvert','Earth Canal','Rip Rap Canal','Concrete Canal','Custom'],symbols:{'U-Ditch':'U Ditch.svg','Pipe Culvert':'Pipe Culvert_SD.svg','Box Culvert':'Box Culvert_SD.svg','Earth Canal':'Earth Canal.svg','Rip Rap Canal':'Rip Rap Canal.svg','Concrete Canal':'Concrete Canal.svg'}},
+ rh_iri:{n:'IRI',group:'Road Health',mode:'range',kind:'iri',o:['Bad','Very Poor','Poor','Fair','Good'],c:{Bad:'#b91c1c','Very Poor':'#ea580c',Poor:'#f97316',Fair:'#eab308',Good:'#16a34a'}},
+ rh_fwd:{n:'FWD',group:'Road Health',mode:'range',kind:'fwd',freeValue:true,o:[]}
 };
-let D=[],customCategories=[],settings={stationLabels:{},labelOffsets:{}};
+const CATEGORY_GROUPS=['Information','Existing','Design','Road Health'];
+const CATEGORY_ORDER={Information:['boundary','ex_settlement','ex_landmark','ex_terrain','info_construction','info_maintenance'],Existing:['ex_pavement','ex_structure','ex_drain'],Design:['ds_speed','ds_pavement','ds_structure','ds_drain'],'Road Health':['rh_iri','rh_fwd']};
+const isDrainCategory=key=>key==='ex_drain'||key==='ds_drain';
+const drainColorForCategory=key=>key==='ex_drain'?'#7393B3':'#00FFFF';
+let D=[],customCategories=[],settings={stationLabels:{},valueLabels:{},labelOffsets:{},theme:'system'};
 const K=()=>Object.keys(C);
 const EXPORT_PAGE_WIDTH=1350;
 const makeId=()=>`item_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`;
+function applyTheme(theme){
+ settings.theme=theme;
+ if(theme==='system')document.documentElement.removeAttribute('data-theme');
+ else document.documentElement.setAttribute('data-theme',theme)
+}
 function sample(){D=[
  {c:'ex_settlement',s:0,e:3000,v:'Rural'},{c:'ex_settlement',s:3000,e:6000,v:'Sub-Urban'},{c:'ex_settlement',s:6000,e:9000,v:'Urban'},
  {c:'ex_landmark',s:6200,v:'School',importance:'Major',sym:'symbols/School_Major.svg'},{c:'ex_terrain',s:0,e:9000,v:'Flat'},
@@ -162,7 +228,7 @@ function sample(){D=[
  {c:'ds_pavement',s:0,e:9000,v:'AC',roadWidth:'7'},
  {c:'ds_structure',s:7000,v:'Bridge'}].map(d=>({...d,_id:makeId()}));save()}
 function save(){
- try{localStorage.setItem('rd3',JSON.stringify({items:D,custom:customCategories,settings}))}
+ try{localStorage.setItem('rd3',JSON.stringify({items:D,custom:customCategories,settings,title:$('title').value,scale:+$('scale').value}))}
  catch(e){$('msg').textContent='Unable to save diagram in this browser: '+e.message}
 }
 function migrate(oldItems){
@@ -188,47 +254,55 @@ function migrateLandmarks(items){
   return{...d,c:'ex_landmark',v:name,importance:level,dim:undefined,sym:d.sym||(image?`symbols/${image}`:'' )}
  })
 }
+let hasStoredState=false;
 try{
  const stored=localStorage.getItem('rd3');
- if(stored){const state=JSON.parse(stored);D=Array.isArray(state.items)?migrateLandmarks(state.items).map(d=>({...d,_id:d._id||makeId(),...(['ex_boundary','ds_boundary'].includes(d.c)?{c:'boundary'}:{}),...(['ex_pavement','ds_pavement'].includes(d.c)?{v:normalizePavement(d.v)}:{})})):[];customCategories=Array.isArray(state.custom)?state.custom:[];if(state.settings&&typeof state.settings==='object')settings={...settings,...state.settings,stationLabels:{...settings.stationLabels,...(state.settings.stationLabels||{})},labelOffsets:{...settings.labelOffsets,...(state.settings.labelOffsets||{})}}}
- else{const old=localStorage.getItem('rd2');if(old)D=migrate(JSON.parse(old)).map(d=>({...d,_id:makeId()}))}
+ if(stored){hasStoredState=true;const state=JSON.parse(stored);D=Array.isArray(state.items)?migrateLandmarks(state.items).map(d=>{const c=['ex_boundary','ds_boundary'].includes(d.c)?'boundary':d.c;return{...d,c,_id:d._id||makeId(),...(isDrainCategory(c)?{side:['LHS','RHS','BS'].includes(d.side)?d.side:'LHS'}:{}),...(['ex_pavement','ds_pavement'].includes(c)?{v:normalizePavement(d.v)}:{})}}):[];customCategories=Array.isArray(state.custom)?state.custom:[];if(state.settings&&typeof state.settings==='object')settings={...settings,...state.settings,stationLabels:{...settings.stationLabels,...(state.settings.stationLabels||{})},valueLabels:{...settings.valueLabels,...(state.settings.valueLabels||{})},labelOffsets:{...settings.labelOffsets,...(state.settings.labelOffsets||{})}};if(typeof state.title==='string')$('title').value=state.title;if(Number.isFinite(Number(state.scale)))$('scale').value=String(Math.max(2,Math.min(200,Number(state.scale))))}
+ else{const old=localStorage.getItem('rd2');if(old){hasStoredState=true;D=migrate(JSON.parse(old)).map(d=>({...d,_id:makeId()}))}}
 }catch(e){$('msg').textContent='Unable to load saved diagram: '+e.message}
 const oldCanalIds=new Set(customCategories.filter(c=>c&&c.name?.toLowerCase()==='canal').map(c=>c.id));
 if(oldCanalIds.size){D=D.map(d=>oldCanalIds.has(d.c)?{...d,c:'ex_drain',v:'Earth Canal',sym:'symbols/Earth Canal.svg'}:d);customCategories=customCategories.filter(c=>!oldCanalIds.has(c.id))}
-customCategories.forEach(c=>{if(c&&c.group==='Designing')c.group='Design';if(c&&c.id&&c.name&&['Existing','Design'].includes(c.group)&&['range','point'].includes(c.mode))C[c.id]={...c,n:c.name,mode:c.mode,o:[],group:c.group,custom:true}})
-if(!D.length)sample();
+customCategories.forEach(c=>{if(c&&c.group==='Designing')c.group='Design';if(c&&c.id&&c.name&&CATEGORY_GROUPS.includes(c.group)&&['range','point'].includes(c.mode))C[c.id]={...c,n:c.name,mode:c.mode,o:[],group:c.group,custom:true}})
+applyTheme(settings.theme||'system');
+if(!D.length&&!hasStoredState)sample();
 const fmt=m=>Math.floor(m/1000)+'+'+String(Math.round(m%1000)).padStart(3,'0');
 function parse(x){x=String(x||'').trim();let m=x.match(/^(\d+)\s*\+\s*(\d{1,3})$/);if(m)return +m[1]*1000+ +m[2];return x===''||isNaN(x)?NaN:+x}
+function normalizeFwd(value){const match=String(value||'').trim().match(/^(\d+(?:\.\d*)?|\.\d+)\s*(?:MPa)?$/i);return match?`${Number(match[1])} MPa`:''}
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function col(c,v){const m=C[c].c&&C[c].c[v];if(m)return m;let h=0;for(const ch of String(v))h=(h*31+ch.charCodeAt(0))%360;return`hsl(${h},55%,68%)`}
 function ink(color){const m=color.match(/^#([0-9a-f]{6})$/i);if(m){const n=parseInt(m[1],16),r=n>>16,g=n>>8&255,b=n&255;return(0.299*r+0.587*g+0.114*b)<145?'#fff':'#111'}return'#111'}
 function isRange(c,v){const cfg=C[c];return cfg.mode==='range'||(cfg.mode==='mixed'&&cfg.o.includes(v))}
-function addItem(c,s,e,v,dim='',sym='',roadWidth='',importance='',pointOnly=false){
+function addItem(c,s,e,v,dim='',sym='',roadWidth='',importance='',pointOnly=false,side='LHS'){
  if(!C[c])return'Choose a category';
  const cfg=C[c];
  if(cfg.kind==='pavement')v=normalizePavement(v);
+ if(cfg.kind==='fwd'){v=normalizeFwd(v);if(!v)return'FWD value must be a non-negative number in MPa'}
+ if(isDrainCategory(c)&&!['LHS','RHS','BS'].includes(side))return'Choose LHS, RHS, or both sides for the Side Drain';
  if(isNaN(s))return'Start station is not a valid number';
  if(!pointOnly&&isRange(c,v)){if(isNaN(e)||e<=s)return'End must be greater than start';if(!v)return'Enter a value';
-  const n=[];D.forEach(o=>{if(o.c!==c||o.e<=s||o.s>=e){n.push(o);return}
-   if(o.s<s)n.push({...o,e:s});if(o.e>e)n.push({...o,s:e})});D=n;D.push({_id:makeId(),c,s,e,v,...(dim?{dim}:{}),...(sym?{sym}:{}),...(cfg.kind==='pavement'&&roadWidth?{roadWidth}:{})})}
+  const n=[];D.forEach(o=>{if(o.c!==c||o.e<=s||o.s>=e||isDrainCategory(c)&&o.side!==side){n.push(o);return}
+   if(o.s<s)n.push({...o,e:s});if(o.e>e)n.push({...o,s:e})});D=n;D.push({_id:makeId(),c,s,e,v,...(dim?{dim}:{}),...(sym?{sym}:{}),...(cfg.kind==='pavement'&&roadWidth?{roadWidth}:{}),...(isDrainCategory(c)?{side}:{})})}
  else{if(!v)return'Choose or enter a value';D.push({_id:makeId(),c,s,v,...(dim?{dim}:{}),...(sym?{sym}:{}),...(cfg.mode==='landmark'?{importance:importance||'Major'}:{})})}
  return''}
 function drawItems(){
  const key=$('cat').value,items=D.map((d,i)=>({d,i})).filter(o=>o.d.c===key).sort((a,b)=>a.d.s-b.d.s),field=C[key]?.kind;
- const showDimension=field==='dimension'||field==='pavement',fieldName=field==='pavement'?'Road Width (metres)':'Dimension';
- $('tb').innerHTML=`<thead><tr><th>Station</th><th>Value</th>${showDimension?`<th>${fieldName}</th>`:''}<th></th></tr></thead><tbody>${items.map(({d,i})=>
-  `<tr><td>${fmt(d.s)}${d.e!=null?' – '+fmt(d.e):''}</td><td>${esc(field==='pavement'?pavementListName(d.v):d.v)}</td>${showDimension?`<td>${esc(field==='pavement'?d.roadWidth||'':d.dim||'')}</td>`:''}<td class="x" data-i="${i}">✕</td></tr>`).join('')}</tbody>`;
+ const showDimension=field==='dimension'||field==='drain'||field==='pavement',fieldName=field==='pavement'?'Road Width (metres)':'Dimension';
+ $('tb').innerHTML=`<thead><tr><th>Station</th><th>Value</th>${isDrainCategory(key)?'<th>Side</th>':''}${showDimension?`<th>${fieldName}</th>`:''}<th></th></tr></thead><tbody>${items.map(({d,i})=>
+  `<tr><td>${fmt(d.s)}${d.e!=null?' – '+fmt(d.e):''}</td><td>${esc(field==='pavement'?pavementListName(d.v):d.v)}</td>${isDrainCategory(key)?`<td>${esc(d.side||'LHS')}</td>`:''}${showDimension?`<td>${esc(field==='pavement'?d.roadWidth||'':d.dim||'')}</td>`:''}<td class="x" data-i="${i}">✕</td></tr>`).join('')}</tbody>`;
  $('cnt').textContent='('+items.length+')'
 }
-function pointCategoryKeys(){return K().filter(k=>['point','landmark'].includes(C[k].mode))}
+function pointCategoryKeys(){return K().filter(k=>['point','landmark'].includes(C[k].mode)||isDrainCategory(k))}
 function stationLabelsEnabled(key){return settings.stationLabels[key]??(C[key].mode!=='landmark')}
+function valueLabelsEnabled(key){return settings.valueLabels[key]??true}
 function renderPointLabelControls(){
  $('pointLabels').innerHTML=pointCategoryKeys().map(key=>{
-  const checked=stationLabelsEnabled(key);
-  return`<label class="point-label-option"><input type="checkbox" data-point-label="${esc(key)}" ${checked?'checked':''}>${esc(C[key].group)}: ${esc(C[key].n)}</label>`
+  const valueChecked=valueLabelsEnabled(key),stationChecked=stationLabelsEnabled(key);
+  const valueLabel=key.endsWith('_structure')||isDrainCategory(key)?'Dimension':'Value';
+  return`<div class="point-label-category"><span>${esc(C[key].group)}: ${esc(C[key].n)}</span><label><input type="checkbox" data-point-label="${esc(key)}" data-label-type="value" ${valueChecked?'checked':''}>${valueLabel}</label><label><input type="checkbox" data-point-label="${esc(key)}" data-label-type="station" ${stationChecked?'checked':''}>Station</label></div>`
  }).join('');
  $('pointLabels').querySelectorAll('[data-point-label]').forEach(input=>input.onchange=()=>{
-  settings.stationLabels[input.dataset.pointLabel]=input.checked;save();draw()
+  const map=input.dataset.labelType==='value'?settings.valueLabels:settings.stationLabels;
+  map[input.dataset.pointLabel]=input.checked;save();draw()
  })
 }
 function symbolForItem(d){
@@ -239,10 +313,10 @@ function symbolForItem(d){
 }
 function pointItems(key){return key==='ex_settlement'?D.filter(d=>d.c==='ex_landmark'):D.filter(d=>d.c===key)}
 function diagramItems(key){return D.filter(d=>d.c===key||(key==='ex_settlement'&&d.c==='ex_landmark'))}
-function pointLabelLayout(key,scale,items=pointItems(key)){
+function pointLabelLayout(key,scale,items=pointItems(key),minStation=D.length?Math.min(...D.map(item=>item.s)):0){
  const lanes=[],positions=new Map();
  items.slice().sort((a,b)=>a.s-b.s).forEach(item=>{
-  const X=10+item.s/scale,spacing=item.c==='ex_landmark'?Math.min(150,Math.max(46,String(item.v).length*6+18)):46;
+  const X=10+(item.s-minStation)/scale,spacing=item.c==='ex_landmark'?Math.min(150,Math.max(46,String(item.v).length*6+18)):46;
   let lane=lanes.findIndex(last=>X-last>=spacing);
   if(lane<0)lane=lanes.length;
   lanes[lane]=X;positions.set(item._id,lane)
@@ -253,39 +327,64 @@ function legendEntries(){
  const entries=[],seen=new Set();
  D.forEach(d=>{
   const cfg=C[d.c];if(!cfg)return;
-  if(!['point','landmark'].includes(cfg.mode))return;
+  const drain=cfg.kind==='drain';
+  if(!['point','landmark'].includes(cfg.mode)&&!drain)return;
   const key=`${d.c}:${d.v}`;if(seen.has(key))return;seen.add(key);
-  const symbol=symbolForItem(d);
-  const label=cfg.mode==='landmark'?`${d.v} - Landmark`:`${cfg.group} ${cfg.n} - ${d.v}`;
-  const cluster=cfg.mode==='landmark'?0:/_structure$/.test(d.c)?1:2;
-  entries.push({key,symbol,color:col(d.c,d.v),label,width:26+label.length*5.7,gray:d.c==='ex_drain',cluster,group:cfg.group,name:cfg.n,value:d.v})
+  const symbol=drain?'':symbolForItem(d);
+  const shortGroup=cfg.group==='Existing'?'Ex':cfg.group==='Design'?'De':cfg.group;
+  const label=drain?`${shortGroup} Side Drain - ${d.v}`:cfg.mode==='landmark'?String(d.v):`${shortGroup} ${cfg.n} - ${d.v}`;
+  const cluster=cfg.mode==='landmark'?0:/_structure$/.test(d.c)?1:drain?3:2;
+  entries.push({key,symbol,color:col(d.c,d.v),label,width:drain?38+label.length*5.7:26+label.length*5.7,drain,drainColor:drain?(cfg.group==='Existing'?'#7393B3':'#00FFFF'):'',drainStyle:drain?sideDrainStyle(d.v):'',cluster,group:cfg.group,name:cfg.n,value:d.v})
  });
  entries.sort((a,b)=>a.cluster-b.cluster||a.group.localeCompare(b.group)||a.name.localeCompare(b.name)||String(a.value).localeCompare(String(b.value)));
  return entries
 }
+function sideDrainStyle(value){
+ const type=String(value||'').toLowerCase();
+ if(type.includes('pipe'))return'dotted';
+ if(type.includes('box'))return'dashed';
+ if(type.includes('ditch'))return'dashdot';
+ if(type.includes('canal'))return'double';
+ return'solid'
+}
+function sideDrainLines(x1,x2,y,color,style,scale=1){
+ const width=Math.max(1,x2-x1),stroke=4,attrs=`stroke="${color}" stroke-width="${stroke}" stroke-linecap="round"`;
+ if(style==='double')return`<line x1="${x1}" x2="${x2}" y1="${y-3*scale}" y2="${y-3*scale}" ${attrs}/><line x1="${x1}" x2="${x2}" y1="${y+3*scale}" y2="${y+3*scale}" ${attrs}/>`;
+ const dash=style==='dotted'?'stroke-dasharray="0.1 5"':style==='dashed'?'stroke-dasharray="8 5"':'';
+ let svg=`<line x1="${x1}" x2="${x2}" y1="${y}" y2="${y}" ${attrs} ${dash}/>`;
+ if(style==='dashdot'&&width>4){
+  const markerWidth=Math.min(46,width),start=(x1+x2-markerWidth)/2,end=start+markerWidth;
+  svg+=`<line x1="${start}" x2="${end}" y1="${y}" y2="${y}" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="9 3 1 3"/>`
+ }
+ return svg
+}
 function draw(){
  const sc=+$('scale').value;$('sc').textContent=sc;
- const L=Math.max(1000,...D.map(d=>d.e??d.s)),LW=130,T=44,x=m=>10+m/sc,baseW=Math.ceil(L/sc)+40;
- let Y0=T;const rows=[{group:'Boundary',k:'boundary',y:Y0,h:44,layout:{count:0,positions:new Map()}}];Y0+=44;
- ['Existing','Design'].forEach(group=>{
+ const minStation=D.length?Math.min(...D.map(d=>d.s)):0,maxStation=D.length?Math.max(...D.map(d=>d.e??d.s)):1000,LW=130,T=44,x=m=>10+(m-minStation)/sc,baseW=Math.max(1000,Math.ceil((maxStation-minStation)/sc))+40;
+ let Y0=T;const rows=[];
+ CATEGORY_GROUPS.forEach(group=>{
   rows.push({group,y:Y0,h:24});Y0+=24;
-  K().filter(k=>C[k].group===group&&!C[k].hidden&&!C[k].diagramHidden).forEach(k=>{
-   const pointItemsForRow=D.filter(item=>item.c===k&&item.e==null),hasPointItems=pointItemsForRow.length>0;
-   const layout=['point','landmark'].includes(C[k].mode)||k==='ex_settlement'?pointLabelLayout(k,sc):hasPointItems?pointLabelLayout(k,sc,pointItemsForRow):{count:0};
-   const h=(C[k].mode==='point'||hasPointItems)&&stationLabelsEnabled(k)?52+Math.max(0,layout.count-1)*11:k==='ex_settlement'&&stationLabelsEnabled('ex_landmark')&&layout.count?52+Math.max(0,layout.count-1)*11:44;
-   const o={k,y:Y0,h,layout};Y0+=o.h;rows.push(o)
+  (CATEGORY_ORDER[group]||K().filter(k=>C[k].group===group)).filter(k=>C[k]?.group===group&&!C[k].hidden&&!C[k].diagramHidden).concat(K().filter(k=>C[k].group===group&&!CATEGORY_ORDER[group]?.includes(k)&&!C[k].hidden&&!C[k].diagramHidden)).forEach(k=>{
+   const labelKey=k==='ex_settlement'?'ex_landmark':k,pointItemsForRow=D.filter(item=>item.c===k&&(isDrainCategory(k)||item.e==null)),hasPointItems=pointItemsForRow.length>0;
+   const layout=['point','landmark'].includes(C[k].mode)||k==='ex_settlement'||isDrainCategory(k)?pointLabelLayout(k,sc,pointItemsForRow):hasPointItems?pointLabelLayout(k,sc,pointItemsForRow):{count:0};
+   const isPointRow=C[k].mode==='point'||C[k].mode==='landmark'||k==='ex_settlement',isDrainRow=isDrainCategory(k),hasPointLabels=isPointRow&&(valueLabelsEnabled(labelKey)||stationLabelsEnabled(labelKey)),hasDrainLabels=isDrainRow&&(valueLabelsEnabled(labelKey)||stationLabelsEnabled(labelKey));
+   const h=hasPointLabels?52+Math.max(0,layout.count-1)*11:44;
+   const o={k,y:Y0,h:hasDrainLabels?Math.max(h,68):h,layout};Y0+=o.h;rows.push(o)
   })
  });
  const legend=legendEntries(),legendTop=Y0+10,legendRows=(()=>{let rows=1,width=78;legend.forEach(entry=>{if(width+entry.width>EXPORT_PAGE_WIDTH-16&&width>78){rows++;width=78}width+=entry.width});return rows})(),W=Math.max(baseW,EXPORT_PAGE_WIDTH),H=legendTop+22+legendRows*18;
  const step=[1000,5000,10000,20000,50000].find(s=>s/sc>=70)||100000;
  let b=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
  rows.forEach(r=>{if(r.k)b+=`<rect x="10" y="${r.y}" width="${W-30}" height="${r.h}" fill="none" stroke="var(--ln)"/>`});
- for(let m=0;m<=L;m+=1000){const M=m%step==0,X=x(m);
-  if(M)b+=`<line x1="${X}" x2="${X}" y1="${T-10}" y2="${Y0}" stroke="var(--bl)" stroke-dasharray="8 3 2 3" opacity=".6"/><text x="${X}" y="${T-16}" font-size="11" text-anchor="middle">ST ${fmt(m)}</text>`;
+ const ticks=new Set([minStation]);for(let m=Math.ceil(minStation/1000)*1000;m<=maxStation;m+=1000)ticks.add(m);
+ [...ticks].sort((a,b)=>a-b).forEach(m=>{const M=m===minStation||m%step===0,X=x(m);
+  if(M)b+=`<line x1="${X}" x2="${X}" y1="${T-10}" y2="${Y0}" stroke="var(--bl)" stroke-dasharray="8 3 2 3" opacity=".6"/><text x="${X}" y="${T-16}" transform="rotate(-90 ${X} ${T-16})" font-size="11" text-anchor="middle">${fmt(m)}</text>`;
   else if(1000/sc>=6)b+=`<line x1="${X}" x2="${X}" y1="${T-6}" y2="${T}" stroke="var(--mu)"/>`}
+ );
  rows.forEach(r=>{if(!r.k)return;const k=r.k;
+  if(isDrainCategory(k))b+=`<line x1="10" x2="${Math.max(10,x(maxStation))}" y1="${r.y+r.h/2}" y2="${r.y+r.h/2}" stroke="var(--mu)" stroke-width=".8" stroke-dasharray="3 4" opacity=".55"><title>Road centerline</title></line>`;
   diagramItems(k).sort((a,b)=>a.s-b.s).forEach(d=>{
-   const cfg=C[k],X=x(d.s),Y=r.y+r.h/2;
+   const cfg=C[k],X=x(d.s),Y=r.y+r.h/2,lane=r.layout.positions?.get(d._id)||0;
    if(isRange(k,d.v)&&Number.isFinite(d.e)){
     const w=Math.max(1,(d.e-d.s)/sc),f=col(k,d.v);
     if(cfg.kind==='pavement'){
@@ -304,11 +403,20 @@ function draw(){
      b+=`<line x1="${X}" x2="${X}" y1="${lineY-7}" y2="${lineY+7}" stroke="#374151" stroke-width="1.5"/><line x1="${end}" x2="${end}" y1="${lineY-7}" y2="${lineY+7}" stroke="#374151" stroke-width="1.5"/>`;
      b+=`<path d="M${X} ${lineY}l7 -3v6z M${end} ${lineY}l-7 -3v6z" fill="#374151"/>`;
      b+=`<rect x="${center-half}" y="${lineY-7}" width="${half*2}" height="14" fill="var(--card)"/><text x="${center}" y="${lineY}" text-anchor="middle" dominant-baseline="middle" font-size="10">${esc(label)}</text>`
-    }else if(k==='ex_drain'||k==='ds_drain'){
-     const drainCfg=C[k],file=drainCfg.symbols[d.v]||'';
-     const drainHref=d.sym||(file?`symbols/${encodeURIComponent(file).replace(/%20/g,'%20')}`:'');
-     if(drainHref)b+=`<image href="${esc(drainHref)}" x="${X}" y="${Y-3.5}" width="${w}" height="7" preserveAspectRatio="none" ${k==='ex_drain'?'style="filter:grayscale(1);opacity:.72"':''}><title>${esc(d.v)}${d.dim?' · '+esc(d.dim):''}: ${fmt(d.s)} – ${fmt(d.e)}</title></image>`;
-     else b+=`<line x1="${X}" x2="${X+w}" y1="${Y}" y2="${Y}" stroke="${f}" stroke-width="5" stroke-dasharray="8 3"><title>${esc(d.v)}: ${fmt(d.s)} – ${fmt(d.e)}</title></line>`;
+    }else if(isDrainCategory(k)){
+     const drainColor=drainColorForCategory(k),drainStyle=sideDrainStyle(d.v);
+     const sides=d.side==='BS'?[-9,9]:[d.side==='RHS'?9:-9],sideName=d.side||'LHS';
+     sides.forEach(offset=>{
+      b+=`<g>${sideDrainLines(X,X+w,Y+offset,drainColor,drainStyle)}<title>${esc(d.v)} (${sideName})${d.dim?' · '+esc(d.dim):''}: ${fmt(d.s)} – ${fmt(d.e)}</title></g>`
+     })
+     if(valueLabelsEnabled(k)&&d.dim){
+      const labelX=X+w/2,labelY=r.y+9,offset=settings.labelOffsets[`${d._id}:dimension`]||{x:0,y:0};
+      b+=`<text class="drag-label" data-label-id="${esc(d._id)}:dimension" data-base-x="${labelX}" data-base-y="${labelY}" x="${labelX+(offset.x||0)}" y="${labelY+(offset.y||0)}" text-anchor="middle" font-size="9" style="fill:var(--tx)">${esc(d.dim)}</text>`
+     }
+     if(stationLabelsEnabled(k)){
+      const labelX=X,labelY=r.y+r.h-5-(lane%2)*12,offset=settings.labelOffsets[`${d._id}:station`]||{x:0,y:0};
+      b+=`<text class="drag-label" data-label-id="${esc(d._id)}:station" data-vertical="true" data-base-x="${labelX}" data-base-y="${labelY}" x="${labelX+(offset.x||0)}" y="${labelY+(offset.y||0)}" transform="rotate(-90 ${labelX+(offset.x||0)} ${labelY+(offset.y||0)})" text-anchor="middle" font-size="8" style="fill:var(--tx)">${fmt(d.s)}</text>`
+     }
     }else{
      b+=`<rect x="${X}" y="${r.y+6}" width="${w}" height="${r.h-12}" fill="${f}" stroke="#0003" stroke-width=".5"><title>${esc(d.v)}: ${fmt(d.s)} – ${fmt(d.e)}</title></rect>`;
      if(k==='ex_settlement'){
@@ -318,13 +426,17 @@ function draw(){
      }else if(w>d.v.length*6+8)b+=`<text x="${X+w/2}" y="${Y}" text-anchor="middle" dominant-baseline="middle" font-size="10" style="fill:${ink(f)}">${esc(d.v)}</text>`
     }
    }else{
-       const symbol=symbolForItem(d),href=symbol&&(symbol.startsWith('data:')?symbol:symbol.startsWith('symbols/')?symbol:`symbols/${encodeURIComponent(symbol).replace(/%20/g,'%20')}`),structure=d.c==='ex_structure'||d.c==='ds_structure',landmark=d.c==='ex_landmark',symbolWidth=href?(structure?20:12):6,symbolHeight=href?(structure?21:15):6,iconY=Y;
-       if((d.c==='ex_drain'||d.c==='ds_drain')&&Number.isFinite(d.e)&&href)b+=`<image href="${esc(href)}" x="${X}" y="${Y-3.5}" width="${Math.max(1,(d.e-d.s)/sc)}" height="7" preserveAspectRatio="none" ${d.c==='ex_drain'?'style="filter:grayscale(1);opacity:.72"':''}><title>${esc(d.v)}${d.dim?' · '+esc(d.dim):''}: ${fmt(d.s)} – ${fmt(d.e)}</title></image>`;
-       else if(href)b+=`<image href="${esc(href)}" x="${X-symbolWidth/2}" y="${iconY-symbolHeight/2}" width="${symbolWidth}" height="${symbolHeight}" preserveAspectRatio="xMidYMid meet"><title>${esc(d.v)}${d.dim?' · '+esc(d.dim):''}${landmark?'':' at '+fmt(d.s)}</title></image>`;
+       const symbol=symbolForItem(d),href=symbol&&(symbol.startsWith('data:')?symbol:symbol.startsWith('symbols/')?symbol:`symbols/${encodeURIComponent(symbol).replace(/%20/g,'%20')}`),structure=d.c==='ex_structure'||d.c==='ds_structure',landmark=d.c==='ex_landmark',symbolWidth=href?(structure?20:12):6,symbolHeight=href?(structure?21:15):6,valueEnabled=valueLabelsEnabled(d.c),stationEnabled=stationLabelsEnabled(d.c),laneCount=r.layout.count,iconY=r.y+(valueEnabled?25+Math.max(0,laneCount-1)*11:16);
+       if(href)b+=`<image href="${esc(href)}" x="${X-symbolWidth/2}" y="${iconY-symbolHeight/2}" width="${symbolWidth}" height="${symbolHeight}" preserveAspectRatio="xMidYMid meet"><title>${esc(d.v)}${d.dim?' · '+esc(d.dim):''}${landmark?'':' at '+fmt(d.s)}</title></image>`;
        else b+=`<circle cx="${X}" cy="${iconY}" r="3" fill="${col(k,d.v)}" stroke="#111"><title>${esc(d.v)} at ${fmt(d.s)}</title></circle>`;
-       if(stationLabelsEnabled(d.c)){
-        const lane=r.layout.positions.get(d._id)||0,labelY=r.y+r.h-6-(r.layout.count-1-lane)*11,offset=settings.labelOffsets[`${d._id}:station`]||{x:0,y:0};
-        b+=`<text class="drag-label" data-label-id="${esc(d._id)}:station" data-base-x="${X}" data-base-y="${labelY}" x="${X+(offset.x||0)}" y="${labelY+(offset.y||0)}" text-anchor="middle" font-size="8" style="fill:var(--tx)">${fmt(d.s)}</text>`
+       const pointLabel=structure?(d.dim||''):d.v;
+       if(valueEnabled&&pointLabel){
+        const labelY=r.y+10+Math.max(0,laneCount-1-lane)*11,offset=settings.labelOffsets[`${d._id}:value`]||{x:0,y:0};
+        b+=`<text class="drag-label" data-label-id="${esc(d._id)}:value" data-base-x="${X}" data-base-y="${labelY}" x="${X+(offset.x||0)}" y="${labelY+(offset.y||0)}" text-anchor="middle" font-size="9" style="fill:var(--tx)">${esc(pointLabel)}</text>`
+       }
+       if(stationEnabled){
+        const labelY=r.y+r.h-6-(lane%2)*12,offset=settings.labelOffsets[`${d._id}:station`]||{x:0,y:0};
+        b+=`<text class="drag-label" data-label-id="${esc(d._id)}:station" data-vertical="true" data-base-x="${X}" data-base-y="${labelY}" x="${X+(offset.x||0)}" y="${labelY+(offset.y||0)}" transform="rotate(-90 ${X+(offset.x||0)} ${labelY+(offset.y||0)})" text-anchor="middle" font-size="8" style="fill:var(--tx)">${fmt(d.s)}</text>`
        }
    }})});
  b+=`<g class="diagram-legend"><text class="legend-title" x="16" y="${legendTop+26}">Legend</text>`;
@@ -333,9 +445,10 @@ function draw(){
   if(legendX+entry.width>EXPORT_PAGE_WIDTH-16&&legendX>78){legendRow++;legendX=78}
   const rowY=legendTop+14+legendRow*18;
   const href=entry.symbol&&(entry.symbol.startsWith('data:')?entry.symbol:entry.symbol.startsWith('symbols/')?entry.symbol:`symbols/${encodeURIComponent(entry.symbol).replace(/%20/g,'%20')}`);
-  if(href)b+=`<image href="${esc(href)}" x="${legendX}" y="${rowY}" width="12" height="15" preserveAspectRatio="${entry.key.startsWith('ex_landmark:')?'xMidYMax meet':'xMidYMid meet'}" ${entry.gray?'style="filter:grayscale(1);opacity:.72"':''}/>`;
+  if(entry.drain)b+=sideDrainLines(legendX,legendX+20,rowY+7,entry.drainColor,entry.drainStyle,.7);
+  else if(href)b+=`<image href="${esc(href)}" x="${legendX}" y="${rowY}" width="12" height="15" preserveAspectRatio="${entry.key.startsWith('ex_landmark:')?'xMidYMax meet':'xMidYMid meet'}"/>`;
   else b+=`<circle cx="${legendX+6}" cy="${rowY+7}" r="3" fill="${entry.color}" stroke="#111" stroke-width=".7"/>`;
-  b+=`<text x="${legendX+17}" y="${rowY+12}" font-size="10">${esc(entry.label)}</text>`;
+  b+=`<text x="${legendX+(entry.drain?25:17)}" y="${rowY+12}" font-size="10">${esc(entry.label)}</text>`;
   legendX+=entry.width
  });
  b+='</g>';
@@ -356,27 +469,30 @@ function wireDraggableLabels(){
  svg.addEventListener('pointermove',event=>{
   if(!drag)return;const p=point(event),x=drag.x+p.x-drag.p.x,y=drag.y+p.y-drag.p.y;
   drag.label.setAttribute('x',x);drag.label.setAttribute('y',y);
-  settings.labelOffsets[drag.id]={x:x-Number(drag.label.dataset.baseX),y:y-Number(drag.label.dataset.baseY)}
+ if(drag.label.dataset.vertical==='true')drag.label.setAttribute('transform',`rotate(-90 ${x} ${y})`);
+ settings.labelOffsets[drag.id]={x:x-Number(drag.label.dataset.baseX),y:y-Number(drag.label.dataset.baseY)}
  });
  const end=()=>{if(drag)save();drag=null};
  svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end)
 }
 function populateCategories(selected){
  const group=$('group').value,keys=K().filter(k=>C[k].group===group);
- $('cat').innerHTML=keys.filter(k=>!C[k].hidden).map(k=>`<option value="${k}">${esc(C[k].n)}</option>`).join('')+(group==='Boundary'?'':'<option value="__custom">Custom…</option>');
+ const ordered=(CATEGORY_ORDER[group]||[]).filter(k=>keys.includes(k)).concat(keys.filter(k=>!(CATEGORY_ORDER[group]||[]).includes(k)));
+ $('cat').innerHTML=ordered.filter(k=>!C[k].hidden).map(k=>`<option value="${k}">${esc(C[k].n)}</option>`).join('')+'<option value="__custom">Custom…</option>';
  if(selected&&keys.includes(selected))$('cat').value=selected;
  sel(true)
 }
 function updatePastePlaceholder(category=C[$('cat').value]){
  const mode=category?.mode||$('customMode').value,range=category?.kind==='boundary'||mode==='range'||mode==='mixed';
- $('excelPaste').placeholder=range
-  ?'Range (tab-separated): Start\tEnd\tValue\tDimension\n0+000\t1+000\tAC\t7'
-  :'Point (tab-separated): Station\tValue\tDimension\n1+000\tU-Ditch\t1x2'
+ const columns=isDrainCategory($('cat').value)?['Start','End','Value','Dimension','Side']:range?['Start','End','Value','Dimension']:['Station','Value','Dimension'];
+ const example=isDrainCategory($('cat').value)?'0+000\t1+000\tU-Ditch\t1x2\tLHS':range?'0+000\t1+000\tAC\t7':'1+000\tU-Ditch\t1x2';
+ $('excelPasteHelp').textContent=`Copy rows for this category from Excel and paste them here (${range?'Range':'Point'} columns, tab-separated: ${columns.join(', ')}).`;
+ $('excelPaste').placeholder=`${columns.join('\t')}\n${example}`
 }
 function sel(resetOptions=false){
  const key=$('cat').value,c=C[key],isCustom=key==='__custom';
  updatePastePlaceholder(c);
- $('categoryField').classList.toggle('hide',$('group').value==='Boundary');
+ $('categoryField').classList.remove('hide');
  $('clr').disabled=isCustom;
  $('customCategory').classList.toggle('hide',!isCustom);
  $('add').classList.toggle('hide',isCustom);
@@ -386,24 +502,28 @@ function sel(resetOptions=false){
  $('vL').classList.toggle('hide',c.kind==='boundary');
  $('landmarkFields').classList.toggle('hide',c.mode!=='landmark');
  $('landmarkCustom').classList.toggle('hide',c.mode!=='landmark'||$('v').value!=='Custom');
- $('dimensionBox').classList.toggle('hide',c.kind!=='dimension'&&c.kind!=='pavement');
+ $('dimensionBox').classList.toggle('hide',c.kind!=='dimension'&&c.kind!=='drain'&&c.kind!=='pavement');
  $('drainCustomBox').classList.toggle('hide',!['ex_drain','ds_drain'].includes(key)||$('v').value!=='Custom');
+ $('drainSideBox').classList.toggle('hide',!isDrainCategory(key));
  $('vL').textContent=c.mode==='landmark'?'Landmark type':'Value';
- $('dimensionLabel').textContent=c.kind==='pavement'?'Road Width (metres)':c.kind==='dimension'?'Dimension (optional)':'';
+ $('dimensionLabel').textContent=c.kind==='pavement'?'Road Width (metres)':c.kind==='dimension'||c.kind==='drain'?'Dimension (optional)':'';
  $('dimension').type=c.kind==='pavement'?'number':'text';
  $('dimension').min=c.kind==='pavement'?'0.1':'';
  $('dimension').step=c.kind==='pavement'?'0.1':'';
- $('dimension').placeholder=c.kind==='pavement'?'e.g. 6':c.kind==='dimension'?'e.g. 1.2 x 1.0 m':'';
+ $('dimension').placeholder=c.kind==='pavement'?'e.g. 6':c.kind==='dimension'||c.kind==='drain'?'e.g. 1.2 x 1.0 m':'';
  if(resetOptions){
   let values=c.o.slice();
   if(c.mode==='landmark')values=['Hospital','School','Pagoda','Market','Custom'];
-  if(c.custom||c.o.includes('Custom'))values=values.filter(v=>v!=='Custom').concat('Custom');
+   if(c.custom||c.freeValue||c.o.includes('Custom'))values=values.filter(v=>v!=='Custom').concat('Custom');
   $('v').innerHTML=values.map(v=>`<option value="${esc(v)}">${esc(c.kind==='pavement'?pavementListName(v):v)}</option>`).join('')
  }
- const freeCustomValue=c.kind==='boundary'||c.mode!=='landmark'&&(c.custom||c.o.includes('Custom'));
+  const freeCustomValue=c.kind==='boundary'||c.mode!=='landmark'&&(c.custom||c.freeValue||c.o.includes('Custom'));
  $('vOtherLabel').classList.toggle('hide',!freeCustomValue);
- $('vOtherLabel').textContent=c.kind==='boundary'?'Value':['ex_drain','ds_drain'].includes(key)?'Side drain name':'Custom value';
- $('vOther').placeholder=c.kind==='boundary'?'Enter boundary/location name':'';
+ $('vOtherLabel').textContent=c.kind==='boundary'?'Value':isDrainCategory(key)?'Side drain name':c.kind==='fwd'?'FWD value (MPa)':c.n+' value';
+ $('vOther').type=c.kind==='fwd'?'number':'text';
+ $('vOther').min=c.kind==='fwd'?'0':'';
+ $('vOther').step=c.kind==='fwd'?'any':'';
+ $('vOther').placeholder=c.kind==='boundary'?'Enter boundary/location name':c.kind==='fwd'?'e.g. 1.25':'Enter value';
  $('vOther').classList.toggle('hide',c.kind!=='boundary'&&($('v').value!=='Custom'||!freeCustomValue));
  drawItems()
 }
@@ -413,9 +533,9 @@ $('v').onchange=()=>sel();
 $('customMode').onchange=()=>{$('eW').classList.toggle('hide',$('customMode').value==='point');updatePastePlaceholder()};
 $('landmarkMajor').onchange=()=>{if($('landmarkMajor').checked)$('landmarkMinor').checked=false;else if(!$('landmarkMinor').checked)$('landmarkMajor').checked=true};
 $('landmarkMinor').onchange=()=>{if($('landmarkMinor').checked)$('landmarkMajor').checked=false;else if(!$('landmarkMajor').checked)$('landmarkMajor').checked=true};
-renderPointLabelControls();$('group').value='Existing';populateCategories();$('cat').value='ex_settlement';sel(true);
+renderPointLabelControls();$('group').value='Existing';populateCategories();$('cat').value='ex_pavement';sel(true);
 $('add').onclick=()=>{
- const c=$('cat').value,cfg=C[c];let value=cfg.kind==='boundary'?$('vOther').value.trim():$('v').value,dim=cfg.kind==='dimension'?$('dimension').value.trim():'',roadWidth=cfg.kind==='pavement'?String($('dimension').value).trim():'',sym='',importance=$('landmarkMinor').checked?'Minor':'Major';
+ const c=$('cat').value,cfg=C[c];let value=cfg.kind==='boundary'?$('vOther').value.trim():$('v').value,dim=cfg.kind==='dimension'||cfg.kind==='drain'?$('dimension').value.trim():'',roadWidth=cfg.kind==='pavement'?String($('dimension').value).trim():'',sym='',importance=$('landmarkMinor').checked?'Minor':'Major';
  const customSelected=cfg.kind!=='boundary'&&value==='Custom';
  if(customSelected&&cfg.mode==='landmark'){
   value=$('landmarkName').value.trim();if(!value){$('msg').textContent='Enter a landmark name';return}
@@ -423,7 +543,8 @@ $('add').onclick=()=>{
   if(file&&file.size>500000){$('msg').textContent='Custom symbol must be smaller than 500 KB';return}
  }else if(customSelected){
   value=$('vOther').value.trim();if(!value){$('msg').textContent='Enter a custom value';return}
-  if(cfg.kind==='dimension'&&['ex_drain','ds_drain'].includes(c)){
+  if(cfg.kind==='fwd'){value=normalizeFwd(value);if(!value){$('msg').textContent='Enter a non-negative FWD value in MPa';return}}
+  if(cfg.kind==='drain'&&isDrainCategory(c)){
    const file=$('drainSymbol').files[0];
    if(file&&file.size>500000){$('msg').textContent='Custom symbol must be smaller than 500 KB';return}
    if(file)sym=file.name
@@ -434,7 +555,7 @@ $('add').onclick=()=>{
  }else if(sym&&!sym.startsWith('data:'))sym=`symbols/${encodeURIComponent(sym).replace(/%20/g,'%20')}`;
  if(cfg.kind==='pavement'&&roadWidth&&(!Number.isFinite(Number(roadWidth))||Number(roadWidth)<=0)){$('msg').textContent='Road width must be a positive number';return}
  const file=customSelected&&cfg.mode==='landmark'?$('landmarkSymbol').files[0]:customSelected&&['ex_drain','ds_drain'].includes(c)?$('drainSymbol').files[0]:null;
- const add=symbol=>{const result=addItem(c,parse($('s').value),parse($('e').value),value,dim,symbol,roadWidth,importance);$('msg').textContent=result;if(!result){clearEntry();draw()}};
+ const add=symbol=>{const result=addItem(c,parse($('s').value),parse($('e').value),value,dim,symbol,roadWidth,importance,false,$('drainSide').value);$('msg').textContent=result;if(!result){clearEntry();draw()}};
  if(file){
   if(file.size>500000){$('msg').textContent='Custom symbol must be smaller than 500 KB';return}
   $('msg').textContent='Reading custom symbol…';const reader=new FileReader();reader.onload=()=>add(String(reader.result));reader.onerror=()=>{$('msg').textContent='Unable to read the selected symbol file'};reader.readAsDataURL(file);return
@@ -450,7 +571,8 @@ function importPastedRows(text){
  const aliases={
   start:['start','start station','station'],end:['end','end station'],
   value:['value','type','label'],dimension:['dimension','dimension (optional)','dim'],
-  width:['road width','road width (metres)','road width (meters)','width'],importance:['importance','major/minor']
+  width:['road width','road width (metres)','road width (meters)','width'],importance:['importance','major/minor'],
+  side:['side','side of road','road side']
  };
  const normalize=value=>String(value||'').trim().toLowerCase();
  const first=rows[0].map(normalize),columns={};
@@ -461,7 +583,7 @@ function importPastedRows(text){
  if(key==='__custom')return{added:0,errors:['Select a category, not Custom, before importing pasted rows']};
  if(!hasHeaders){
   const point=cfg.mode==='point'||cfg.mode==='landmark';
-  columns.start=0;columns.end=point?-1:1;columns.value=point?1:2;columns.dimension=point?2:3;columns.width=point?3:4;columns.importance=point?4:5
+  columns.start=0;columns.end=point?-1:1;columns.value=point?1:2;columns.dimension=point?2:3;columns.width=point?3:4;columns.importance=point?4:5;if(isDrainCategory(key))columns.side=4
  }
  const data=hasHeaders?rows.slice(1):rows,pointRows=cfg.mode==='point'||cfg.mode==='landmark'||(hasHeaders&&columns.end<0);
  let added=0;const errors=[];
@@ -486,11 +608,68 @@ function importPastedRows(text){
   const range=cfg.kind==='boundary'||!pointRows&&(cfg.mode==='range'||(cfg.mode==='mixed'&&!Number.isNaN(end)));
   if(range&&Number.isNaN(end)){errors.push(`Row ${rowNumber}: missing or invalid End station`);return}
   if(cfg.kind==='pavement'&&roadWidth&&(!Number.isFinite(Number(roadWidth))||Number(roadWidth)<=0)){errors.push(`Row ${rowNumber}: Road Width must be a positive number`);return}
-  const result=addItem(key,start,range?end:NaN,value,cfg.kind==='pavement'?'':dimension,symbol,roadWidth,importance,!range);
+  const side=cell('side')||'LHS';
+  const result=addItem(key,start,range?end:NaN,value,cfg.kind==='pavement'?'':dimension,symbol,roadWidth,importance,!range,side.toUpperCase());
   if(result)errors.push(`Row ${rowNumber}: ${result}`);else added++
  });
  if(added)draw();
  return{added,errors}
+}
+function projectSnapshot(){
+ return{
+  format:'road-strip-diagram',
+  version:1,
+  title:$('title').value,
+  scale:+$('scale').value,
+  group:$('group').value,
+  category:$('cat').value,
+  items:D,
+  custom:customCategories,
+  settings
+ }
+}
+function downloadProject(){
+ const name=($('title').value||'Road').trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g,'-').replace(/[. ]+$/g,'')||'Road',blob=new Blob([JSON.stringify(projectSnapshot(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download=`${name}_Diagram.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
+}
+function validateProject(project){
+ if(!project||typeof project!=='object'||Array.isArray(project)||project.format!=='road-strip-diagram'||project.version!==1)throw Error('This is not a supported Road Strip Diagram project file');
+ if(!Array.isArray(project.items)||!Array.isArray(project.custom))throw Error('Project file is missing its items or custom categories');
+ const customIds=new Set(),custom=project.custom.map(category=>{
+  if(!category||typeof category.id!=='string'||!/^custom_[\w-]+$/.test(category.id)||typeof category.name!=='string'||!category.name.trim()||!CATEGORY_GROUPS.includes(category.group)||!['range','point'].includes(category.mode))throw Error('Project file contains an invalid custom category');
+  if(customIds.has(category.id)||C[category.id]&&!C[category.id].custom)throw Error(`Project file contains a duplicate category: ${category.id}`);
+  customIds.add(category.id);return{id:category.id,name:category.name.trim(),group:category.group,mode:category.mode}
+ });
+ const known=new Set([...Object.keys(C).filter(key=>!C[key].custom),...customIds]);
+ const items=project.items.map((item,index)=>{
+  if(!item||typeof item!=='object'||typeof item.c!=='string'||!known.has(item.c)||!Number.isFinite(item.s)||item.e!=null&&(!Number.isFinite(item.e)||item.e<=item.s)||item.v==null||String(item.v).trim()==='')throw Error(`Project file contains an invalid item at row ${index+1}`);
+  const value=C[item.c]?.kind==='fwd'?normalizeFwd(item.v):String(item.v);
+  if(!value)throw Error(`Project file contains an invalid FWD value at row ${index+1}`);
+  const side=isDrainCategory(item.c)?item.side==null?'LHS':item.side:'';
+  if(isDrainCategory(item.c)&&!['LHS','RHS','BS'].includes(side))throw Error(`Project file contains an invalid side at row ${index+1}`);
+  return{...item,_id:typeof item._id==='string'&&item._id?item._id:makeId(),v:value,...(isDrainCategory(item.c)?{side}:{}),...(item.dim==null?{dim:undefined}:{dim:String(item.dim)}),...(item.sym==null?{sym:undefined}:{sym:String(item.sym)})}
+ });
+ const raw=project.settings&&typeof project.settings==='object'?project.settings:{};
+ const boolMap=value=>Object.fromEntries(Object.entries(value&&typeof value==='object'?value:{}).filter(([,enabled])=>typeof enabled==='boolean'));
+ const offsets=Object.fromEntries(Object.entries(raw.labelOffsets&&typeof raw.labelOffsets==='object'?raw.labelOffsets:{}).filter(([,offset])=>offset&&Number.isFinite(offset.x)&&Number.isFinite(offset.y)).map(([id,offset])=>[id,{x:offset.x,y:offset.y}]));
+ const settings={stationLabels:boolMap(raw.stationLabels),valueLabels:boolMap(raw.valueLabels),labelOffsets:offsets,theme:['system','light','dark'].includes(raw.theme)?raw.theme:'system'};
+ const scale=Number(project.scale);
+ return{items,custom,settings,title:typeof project.title==='string'?project.title:'Road',scale:Number.isFinite(scale)?Math.max(2,Math.min(200,scale)):40,group:CATEGORY_GROUPS.includes(project.group)?project.group:'Existing',category:typeof project.category==='string'?project.category:''}
+}
+function registerCustomCategories(categories){
+ Object.keys(C).filter(key=>C[key].custom).forEach(key=>delete C[key]);
+ customCategories=categories;
+ customCategories.forEach(category=>{C[category.id]={...category,n:category.name,o:[],custom:true}})
+}
+async function loadProjectFile(file){
+ if(!file)return;
+ if(file.size>25*1024*1024)throw Error('Project file must be smaller than 25 MB');
+ const data=validateProject(JSON.parse(await file.text()));
+ D=data.items;settings=data.settings;registerCustomCategories(data.custom);
+ $('title').value=data.title;$('scale').value=String(data.scale);applyTheme(settings.theme);
+ $('group').value=data.group;populateCategories(data.category);
+ if($('cat').value!==data.category)$('cat').selectedIndex=0;
+ renderPointLabelControls();draw()
 }
 function exportPages(){
  draw();const source=$('bd').querySelector('svg'),header=$('hd').querySelector('svg'),width=Number(source.getAttribute('width')),height=Number(source.getAttribute('height')),slice=EXPORT_PAGE_WIDTH,total=Math.max(1,Math.ceil((width-10)/slice));
@@ -529,6 +708,41 @@ $('imp').onclick=()=>{
  if(result.errors.length)summary.push(result.errors.join('; '));
  $('msg').textContent=summary.join(' · ')
 };
+$('saveProjectBtn').onclick=()=>{
+ try{downloadProject();$('msg').textContent='Project saved as a JSON file'}
+ catch(error){$('msg').textContent='Unable to save project: '+error.message}
+};
+$('loadProjectBtn').onclick=()=>$('projectFile').click();
+$('projectFile').onchange=async()=>{
+ try{await loadProjectFile($('projectFile').files[0]);$('msg').textContent='Project loaded successfully'}
+ catch(error){$('msg').textContent='Unable to load project: '+error.message}
+ finally{$('projectFile').value=''}
+};
+$('settingsBtn').onclick=()=>{
+ $('settingsTheme').value=settings.theme||'system';$('settingsScale').value=$('scale').value;$('settingsScaleValue').textContent=$('settingsScale').value;$('settingsDialog').showModal()
+};
+$('settingsScale').oninput=()=>$('settingsScaleValue').textContent=$('settingsScale').value;
+$('settingsCancel').onclick=()=>$('settingsDialog').close();
+$('settingsApply').onclick=()=>{
+ applyTheme($('settingsTheme').value);$('scale').value=$('settingsScale').value;$('settingsDialog').close();draw()
+};
+$('resetZoomBtn').onclick=()=>{$('scale').value='40';$('view').scrollLeft=0;draw()};
+$('showLabelsBtn').onclick=()=>$('pointLabels').scrollIntoView({behavior:'smooth',block:'center'});
+$('gettingStartedBtn').onclick=()=>$('gettingStartedDialog').showModal();
+$('gettingStartedClose').onclick=()=>$('gettingStartedDialog').close();
+$('aboutBtn').onclick=()=>$('aboutDialog').showModal();
+$('aboutClose').onclick=()=>$('aboutDialog').close();
+document.querySelectorAll('.menu button,.menu a').forEach(item=>item.addEventListener('click',()=>item.closest('details').removeAttribute('open')));
+$('rst').onclick=()=>$('resetDialog').showModal();
+$('resetCancel').onclick=()=>$('resetDialog').close();
+function clearDiagram(){
+ D=[];settings.labelOffsets={};$('resetDialog').close();$('msg').textContent='Diagram cleared';draw()
+}
+$('resetOk').onclick=clearDiagram;
+$('resetSave').onclick=()=>{
+ try{downloadProject();clearDiagram()}
+ catch(error){$('msg').textContent='Unable to save project: '+error.message}
+};
 $('pdf').onclick=()=>{
  exportPages();const base=($('title').value||'Road').trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g,'-').replace(/[. ]+$/g,'')||'Road';
  const oldTitle=document.title;document.title=`${base}_Diagram_Page1`;
@@ -555,7 +769,6 @@ $('tb').onclick=e=>{const i=e.target.dataset.i;if(i!=null){D.splice(+i,1);draw()
 $('clr').onclick=()=>{const c=$('cat').value;if(!C[c])return;if(confirm('Clear all items in '+C[c].n+'?')){D=D.filter(d=>d.c!==c&&!(c==='ex_pavement'&&d.c==='ex_width')&&!(c==='ds_pavement'&&d.c==='ds_width'));draw()}};
 $('customAdd').onclick=()=>{
  const name=$('customName').value.trim(),group=$('group').value;
- if(group==='Boundary'){$('msg').textContent='Use the Boundary value field to name a station range';return}
  if(!name){$('msg').textContent='Enter a custom category name';return}
  if(K().some(k=>C[k].group===group&&C[k].n.toLowerCase()===name.toLowerCase())){$('msg').textContent='That category already exists in '+group;return}
  const base='custom_'+Date.now().toString(36);let id=base,suffix=1;
@@ -564,7 +777,6 @@ $('customAdd').onclick=()=>{
  customCategories.push(category);C[id]={...category,n:name,o:[],custom:true};save();
  renderPointLabelControls();$('customName').value='';populateCategories(id);$('msg').textContent='';draw()
 };
-$('rst').onclick=()=>{sample();draw()};
 $('scale').oninput=draw;$('title').oninput=draw;
 draw();
 </script></body></html>
