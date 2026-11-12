@@ -17,7 +17,7 @@ body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-appl
 .menu[open] summary,.menu summary:hover{background:var(--bg)}
 .menu-panel{position:absolute;top:100%;left:0;z-index:6;min-width:190px;padding:5px;background:var(--card);border:1px solid var(--ln);border-radius:7px;box-shadow:0 6px 18px #0002}
 .menu-item{display:block;width:100%;text-align:left;color:var(--tx);background:transparent;padding:7px 9px;margin:0;border-radius:4px;text-decoration:none}
-.menu-item:hover{background:var(--bg)}
+.menu-item:hover,.menu-item:focus-visible{background:var(--bg)}
 dialog{max-width:min(440px,calc(100vw - 32px));border:1px solid var(--ln);border-radius:10px;padding:18px;background:var(--card);color:var(--tx)}
 dialog::backdrop{background:#0007}
 dialog h2{margin-top:0}
@@ -35,6 +35,10 @@ textarea{height:70px;font-size:12px}
 .r{display:flex;gap:6px}.r>*{flex:1}
 .r label{display:flex;align-items:center;gap:5px}
 input[type=checkbox]{width:auto;margin:0}
+.category-select-row{display:flex;align-items:end;gap:6px}
+.category-select-row>div{flex:1;min-width:0}
+.category-select-row label{margin-top:6px}
+.category-delete{width:34px;height:34px;flex:none;margin:0;padding:0;background:var(--bg);color:#dc2626;border:1px solid var(--ln);font-size:20px;line-height:1}
 button{cursor:pointer;background:var(--ac);color:#fff;border:0;margin-top:8px}
 button.s{background:var(--bg);color:var(--tx);border:1px solid var(--ln);margin-top:4px}
 #msg{color:#dc2626;font-size:12px;min-height:16px;margin-top:4px}
@@ -45,12 +49,12 @@ td.x{cursor:pointer;color:#dc2626;text-align:right;width:18px}
 svg text{fill:var(--tx);font-family:inherit}
 .hide{display:none!important}
 .footer{text-align:right;color:var(--mu);font-size:12px;padding:4px 12px 12px}
-.hint{font-size:11px;color:var(--mu);margin:4px 0;white-space:pre-wrap;font-family:inherit}
+.point-label-add{margin:4px 0}
 .point-label-category{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--ln);font-size:11px}
 .point-label-category>span{flex:1}
 .point-label-category label{display:flex;align-items:center;gap:3px;margin:0}
 .point-label-category input{flex:none}
-.drag-label{cursor:move;touch-action:none;user-select:none}
+.point-label-remove{width:24px;height:24px;flex:none;margin:0;padding:0;background:transparent;color:#dc2626;font-size:17px;line-height:1}
 .legend-title{font-size:12px;font-weight:700}
 #printPages{display:none}
 @media(max-width:800px){.app{flex-direction:column}.panel{width:100%;position:static;max-height:none}.view{max-height:70vh;width:100%}}
@@ -71,7 +75,8 @@ svg text{fill:var(--tx);font-family:inherit}
 <nav class="menubar" aria-label="Main menu">
  <details class="menu"><summary>File</summary><div class="menu-panel" role="menu">
   <button class="menu-item" type="button" id="loadProjectBtn" role="menuitem">Load Project...</button>
-  <button class="menu-item" type="button" id="saveProjectBtn" role="menuitem">Save Project</button>
+  <button class="menu-item" type="button" id="saveProjectBtn" role="menuitem">Save Project...</button>
+  <button class="menu-item" type="button" id="shareProjectBtn" role="menuitem">Share Project Link</button>
   <button class="menu-item" type="button" id="settingsBtn" role="menuitem">Settings...</button>
  </div></details>
  <details class="menu"><summary>View</summary><div class="menu-panel" role="menu">
@@ -79,6 +84,7 @@ svg text{fill:var(--tx);font-family:inherit}
   <button class="menu-item" type="button" id="showLabelsBtn" role="menuitem">Point Labels...</button>
  </div></details>
  <details class="menu"><summary>Export</summary><div class="menu-panel" role="menu">
+  <button class="menu-item" type="button" id="print" role="menuitem">Print...</button>
   <button class="menu-item" type="button" id="pdf" role="menuitem">Export PDF...</button>
   <button class="menu-item" type="button" id="jpg" role="menuitem">Export JPG</button>
  </div></details>
@@ -94,13 +100,13 @@ svg text{fill:var(--tx);font-family:inherit}
 <h2>1. INPUT</h2>
 <label>Road Name/Number</label><input id="title" value="PR 2718">
 <label>Main category</label><select id="group"><option>Information</option><option>Existing</option><option>Design</option><option>Road Health</option></select>
-<div id="categoryField"><label>Category</label><select id="cat"></select></div>
+<div id="categoryField" class="category-select-row"><div><label for="cat">Category</label><select id="cat"></select></div><button class="category-delete hide" type="button" id="deleteCategory" aria-label="Delete selected category" title="Delete selected category">×</button></div>
 <div id="customCategory" class="hide">
  <label>New category name</label><input id="customName" placeholder="e.g. Drainage">
  <label>Item type</label><select id="customMode"><option value="range">Range</option><option value="point">Point</option></select>
+ <label id="customSideOption"><input id="customSideAware" type="checkbox"> Include side of road (LHS / RHS / both)</label>
  <button class="s" id="customAdd">Add category</button>
 </div>
-<button class="s hide" id="deleteCategory">Delete selected custom category</button>
 <div class="r"><div><label>Start station</label><input id="s" placeholder="12+500 or 12500"></div>
 <div id="eW"><label>End station</label><input id="e" placeholder="15+000"></div></div>
 <label id="vL">Value</label><select id="v"></select>
@@ -126,12 +132,12 @@ svg text{fill:var(--tx);font-family:inherit}
 <label>Scale: <span id="sc"></span> m per pixel (smaller = zoom in, wider)</label>
 <input type="range" id="scale" min="2" max="200" value="40">
 <h3>Labels</h3>
+<select id="labelCategoryAdd" class="point-label-add" aria-label="Add category to Labels"></select>
 <div id="pointLabels"></div>
-<p class="hint">Drag diagram labels to reposition them.</p>
-<button class="s" id="rst">Reset to empty</button>
 <h2>Items <span id="cnt"></span></h2>
 <div class="list"><table id="tb"></table></div>
 <button class="s" id="clr">Clear selected category</button>
+<button class="s" id="rst">Reset to empty</button>
 </div>
 <div class="view" id="view"><div class="fl"><div class="hd" id="hd"></div><div id="bd"></div></div></div>
 </div>
@@ -139,7 +145,7 @@ svg text{fill:var(--tx);font-family:inherit}
 <div id="printPages"></div>
 <input id="projectFile" type="file" accept=".json,application/json" class="hide">
 <dialog id="resetDialog">
- <h2>Reset diagram</h2><p>Clear all diagram data? Choose Save to download the current project before clearing.</p>
+ <h2>Reset diagram</h2><p>Clear all diagram data? Choose Save to save the current project before clearing.</p>
  <div class="dialog-actions"><button type="button" class="secondary" id="resetCancel">Cancel</button><button type="button" class="secondary" id="resetOk">OK</button><button type="button" id="resetSave">Save</button></div>
 </dialog>
 <dialog id="settingsDialog">
@@ -149,7 +155,7 @@ svg text{fill:var(--tx);font-family:inherit}
  <div class="dialog-actions"><button type="button" class="secondary" id="settingsCancel">Cancel</button><button type="button" id="settingsApply">Apply</button></div>
 </dialog>
 <dialog id="gettingStartedDialog">
- <h2>Getting Started</h2><p>Choose a category, enter its station range or point value, then add it to the diagram. Use the Labels checkboxes to control value and station text.</p><p>Use File → Save Project to download an editable JSON file, or File → Load Project to continue later. Export PDF opens the print dialog; Export JPG downloads page images.</p>
+ <h2>Getting Started</h2><p>Choose a category, enter its station range or point type, then add it to the diagram. Use the Labels list to control Type/Value, Station, and Sum for each included category. Add categories from the list and remove them with ×.</p> <p>Use File → Save Project to save an editable JSON file, or File → Load Project to continue later. File → Share Project Link creates a project-specific link. Export → Print opens the print dialog; Export PDF opens the same dialog with a PDF filename suggestion; Export JPG saves page images.</p>
  <div class="dialog-actions"><button type="button" id="gettingStartedClose">Close</button></div>
 </dialog>
 <dialog id="aboutDialog">
@@ -206,13 +212,14 @@ const C={
  ds_structure:{n:'Structure',group:'Design',mode:'point',kind:'dimension',o:['Bridge','Box Culvert','Pipe Culvert','Custom'],symbols:{Bridge:'Bridge_DS.svg','Box Culvert':'Box Culvert_DS.svg','Pipe Culvert':'Pipe Culvert_DS.svg'}},
  ds_drain:{n:'Side Drain',group:'Design',mode:'range',kind:'drain',o:['U-Ditch','Pipe Culvert','Box Culvert','Earth Canal','Rip Rap Canal','Concrete Canal','Custom'],symbols:{'U-Ditch':'U Ditch.svg','Pipe Culvert':'Pipe Culvert_SD.svg','Box Culvert':'Box Culvert_SD.svg','Earth Canal':'Earth Canal.svg','Rip Rap Canal':'Rip Rap Canal.svg','Concrete Canal':'Concrete Canal.svg'}},
  rh_iri:{n:'IRI',group:'Road Health',mode:'range',kind:'iri',o:['Bad','Very Poor','Poor','Fair','Good'],c:{Bad:'#b91c1c','Very Poor':'#ea580c',Poor:'#f97316',Fair:'#eab308',Good:'#16a34a'}},
- rh_fwd:{n:'FWD',group:'Road Health',mode:'range',kind:'fwd',freeValue:true,o:[]}
+ rh_fwd:{n:'FWD',group:'Road Health',mode:'range',kind:'fwd',o:[]}
 };
 const CATEGORY_GROUPS=['Information','Existing','Design','Road Health'];
 const CATEGORY_ORDER={Information:['boundary','ex_settlement','ex_landmark','ex_terrain','info_construction','info_maintenance'],Existing:['ex_pavement','ex_structure','ex_drain'],Design:['ds_speed','ds_pavement','ds_structure','ds_drain'],'Road Health':['rh_iri','rh_fwd']};
 const isDrainCategory=key=>key==='ex_drain'||key==='ds_drain';
+const hasRoadSideCategory=key=>isDrainCategory(key)||C[key]?.sideAware===true;
 const drainColorForCategory=key=>key==='ex_drain'?'#7393B3':'#00FFFF';
-let D=[],customCategories=[],settings={stationLabels:{},valueLabels:{},labelOffsets:{},theme:'system'};
+let D=[],customCategories=[],deletedCategories=new Set(),settings={stationLabels:{},valueLabels:{},sumLabels:{},labelCategories:['ex_landmark','ex_structure','ds_structure','ex_drain','ds_drain'],theme:'system'};
 const K=()=>Object.keys(C);
 const EXPORT_PAGE_WIDTH=1350;
 const makeId=()=>`item_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`;
@@ -229,7 +236,7 @@ function sample(){D=[
  {c:'ds_pavement',s:0,e:9000,v:'AC',roadWidth:'7'},
  {c:'ds_structure',s:7000,v:'Bridge'}].map(d=>({...d,_id:makeId()}));save()}
 function save(){
- try{localStorage.setItem('rd3',JSON.stringify({items:D,custom:customCategories,settings,title:$('title').value,scale:+$('scale').value}))}
+ try{localStorage.setItem('rd3',JSON.stringify({items:D,custom:customCategories,deleted:[...deletedCategories],settings,title:$('title').value,scale:+$('scale').value}))}
  catch(e){$('msg').textContent='Unable to save diagram in this browser: '+e.message}
 }
 function migrate(oldItems){
@@ -258,12 +265,13 @@ function migrateLandmarks(items){
 let hasStoredState=false;
 try{
  const stored=localStorage.getItem('rd3');
- if(stored){hasStoredState=true;const state=JSON.parse(stored);D=Array.isArray(state.items)?migrateLandmarks(state.items).map(d=>{const c=['ex_boundary','ds_boundary'].includes(d.c)?'boundary':d.c;return{...d,c,_id:d._id||makeId(),...(isDrainCategory(c)?{side:['LHS','RHS','BS'].includes(d.side)?d.side:'LHS'}:{}),...(['ex_pavement','ds_pavement'].includes(c)?{v:normalizePavement(d.v)}:{})}}):[];customCategories=Array.isArray(state.custom)?state.custom:[];if(state.settings&&typeof state.settings==='object')settings={...settings,...state.settings,stationLabels:{...settings.stationLabels,...(state.settings.stationLabels||{})},valueLabels:{...settings.valueLabels,...(state.settings.valueLabels||{})},labelOffsets:{...settings.labelOffsets,...(state.settings.labelOffsets||{})}};if(typeof state.title==='string')$('title').value=state.title;if(Number.isFinite(Number(state.scale)))$('scale').value=String(Math.max(2,Math.min(200,Number(state.scale))))}
+ if(stored){hasStoredState=true;const state=JSON.parse(stored);D=Array.isArray(state.items)?migrateLandmarks(state.items).map(d=>{const c=['ex_boundary','ds_boundary'].includes(d.c)?'boundary':d.c;return{...d,c,_id:d._id||makeId(),...(isDrainCategory(c)?{side:['LHS','RHS','BS'].includes(d.side)?d.side:'LHS'}:{}),...(['ex_pavement','ds_pavement'].includes(c)?{v:normalizePavement(d.v)}:{})}}):[];customCategories=Array.isArray(state.custom)?state.custom:[];deletedCategories=new Set(Array.isArray(state.deleted)?state.deleted.filter(id=>typeof id==='string'):[]);if(state.settings&&typeof state.settings==='object'){const storedSettings={...state.settings};delete storedSettings.labelOffsets;settings={...settings,...storedSettings,stationLabels:{...settings.stationLabels,...(storedSettings.stationLabels||{})},valueLabels:{...settings.valueLabels,...(storedSettings.valueLabels||{})},sumLabels:{...settings.sumLabels,...(storedSettings.sumLabels||{})},labelCategories:Array.isArray(storedSettings.labelCategories)?storedSettings.labelCategories:settings.labelCategories}}if(typeof state.title==='string')$('title').value=state.title;if(Number.isFinite(Number(state.scale)))$('scale').value=String(Math.max(2,Math.min(200,Number(state.scale))))}
  else{const old=localStorage.getItem('rd2');if(old){hasStoredState=true;D=migrate(JSON.parse(old)).map(d=>({...d,_id:makeId()}))}}
 }catch(e){$('msg').textContent='Unable to load saved diagram: '+e.message}
 const oldCanalIds=new Set(customCategories.filter(c=>c&&c.name?.toLowerCase()==='canal').map(c=>c.id));
 if(oldCanalIds.size){D=D.map(d=>oldCanalIds.has(d.c)?{...d,c:'ex_drain',v:'Earth Canal',sym:'symbols/Earth Canal.svg'}:d);customCategories=customCategories.filter(c=>!oldCanalIds.has(c.id))}
-customCategories.forEach(c=>{if(c&&c.group==='Designing')c.group='Design';if(c&&c.id&&c.name&&CATEGORY_GROUPS.includes(c.group)&&['range','point'].includes(c.mode))C[c.id]={...c,n:c.name,mode:c.mode,o:[],group:c.group,custom:true}})
+customCategories.forEach(c=>{if(c&&c.group==='Designing')c.group='Design';if(c&&c.id&&c.name&&CATEGORY_GROUPS.includes(c.group)&&['range','point'].includes(c.mode))C[c.id]={...c,n:c.name,mode:c.mode,o:[],group:c.group,sideAware:c.sideAware===true,custom:true}})
+ D=D.map(item=>hasRoadSideCategory(item.c)?{...item,side:['LHS','RHS','BS'].includes(item.side)?item.side:'LHS'}:item);
 applyTheme(settings.theme||'system');
 if(!D.length&&!hasStoredState)sample();
 const fmt=m=>Math.floor(m/1000)+'+'+String(Math.round(m%1000)).padStart(3,'0');
@@ -282,33 +290,71 @@ function addItem(c,s,e,v,dim='',sym='',roadWidth='',importance='',pointOnly=fals
   if(!v)return'FWD value must be a non-negative number in MPa';
   if(!dim)return'Enter a non-negative FWD Base Line in MPa'
  }
- if(isDrainCategory(c)&&!['LHS','RHS','BS'].includes(side))return'Choose LHS, RHS, or both sides for the Side Drain';
+ if(hasRoadSideCategory(c)&&!['LHS','RHS','BS'].includes(side))return'Choose LHS, RHS, or both sides';
  if(isNaN(s))return'Start station is not a valid number';
  if(!pointOnly&&isRange(c,v)){if(isNaN(e)||e<=s)return'End must be greater than start';if(!v)return'Enter a value';
-  const n=[];D.forEach(o=>{if(o.c!==c||o.e<=s||o.s>=e||isDrainCategory(c)&&o.side!==side){n.push(o);return}
-   if(o.s<s)n.push({...o,e:s});if(o.e>e)n.push({...o,s:e})});D=n;D.push({_id:makeId(),c,s,e,v,...(dim?{dim}:{}),...(sym?{sym}:{}),...(cfg.kind==='pavement'&&roadWidth?{roadWidth}:{}),...(isDrainCategory(c)?{side}:{})})}
- else{if(!v)return'Choose or enter a value';D.push({_id:makeId(),c,s,v,...(dim?{dim}:{}),...(sym?{sym}:{}),...(cfg.mode==='landmark'?{importance:importance||'Major'}:{})})}
+  const n=[];D.forEach(o=>{if(o.c!==c||o.e<=s||o.s>=e||hasRoadSideCategory(c)&&o.side!==side){n.push(o);return}
+   if(o.s<s)n.push({...o,e:s});if(o.e>e)n.push({...o,s:e})});D=n;D.push({_id:makeId(),c,s,e,v,...(dim?{dim}:{}),...(sym?{sym}:{}),...(cfg.kind==='pavement'&&roadWidth?{roadWidth}:{}),...(hasRoadSideCategory(c)?{side}:{})})}
+ else{if(!v)return'Choose or enter a value';D.push({_id:makeId(),c,s,v,...(dim?{dim}:{}),...(sym?{sym}:{}),...(cfg.mode==='landmark'?{importance:importance||'Major'}:{}),...(hasRoadSideCategory(c)?{side}:{})})}
  return''}
 function drawItems(){
  const key=$('cat').value,items=D.map((d,i)=>({d,i})).filter(o=>o.d.c===key).sort((a,b)=>a.d.s-b.d.s),field=C[key]?.kind;
  const showDimension=field==='dimension'||field==='drain'||field==='pavement'||field==='fwd',fieldName=field==='pavement'?'Road Width (metres)':field==='fwd'?'Base Line (MPa)':'Dimension';
- $('tb').innerHTML=`<thead><tr><th>Station</th><th>Value</th>${isDrainCategory(key)?'<th>Side</th>':''}${showDimension?`<th>${fieldName}</th>`:''}<th></th></tr></thead><tbody>${items.map(({d,i})=>
-  `<tr><td>${fmt(d.s)}${d.e!=null?' – '+fmt(d.e):''}</td><td>${esc(field==='pavement'?pavementListName(d.v):d.v)}</td>${isDrainCategory(key)?`<td>${esc(d.side||'LHS')}</td>`:''}${showDimension?`<td>${esc(field==='pavement'?d.roadWidth||'':d.dim||'')}</td>`:''}<td class="x" data-i="${i}">✕</td></tr>`).join('')}</tbody>`;
+ $('tb').innerHTML=`<thead><tr><th>Station</th><th>${categoryValueLabel(key)}</th>${hasRoadSideCategory(key)?'<th>Side</th>':''}${showDimension?`<th>${fieldName}</th>`:''}<th></th></tr></thead><tbody>${items.map(({d,i})=>
+  `<tr><td>${fmt(d.s)}${d.e!=null?' – '+fmt(d.e):''}</td><td>${esc(field==='pavement'?pavementListName(d.v):d.v)}</td>${hasRoadSideCategory(key)?`<td>${esc(d.side||'LHS')}</td>`:''}${showDimension?`<td>${esc(field==='pavement'?d.roadWidth||'':d.dim||'')}</td>`:''}<td class="x" data-i="${i}">✕</td></tr>`).join('')}</tbody>`;
  $('cnt').textContent='('+items.length+')'
 }
-function pointCategoryKeys(){return K().filter(k=>['point','landmark'].includes(C[k].mode)||isDrainCategory(k))}
-function stationLabelsEnabled(key){return settings.stationLabels[key]??(C[key].mode!=='landmark')}
-function valueLabelsEnabled(key){return settings.valueLabels[key]??true}
+function labelCategoryKeys(){
+ const valid=Array.isArray(settings.labelCategories)?settings.labelCategories:[];
+ return[...new Set(valid)].filter(key=>C[key]&&!deletedCategories.has(key)&&!C[key].hidden)
+}
+function availableLabelCategoryKeys(){return K().filter(key=>!deletedCategories.has(key)&&!C[key].hidden&&(!C[key].diagramHidden||key==='ex_landmark'))}
+function defaultLabelsEnabled(key,type){
+ if(type==='sum')return false;
+ const isDefault=key==='ex_landmark'||key.endsWith('_structure')||isDrainCategory(key);
+ if(type==='value')return isDefault;
+ return isDefault
+}
+function categoryValueLabel(key){return['pavement','dimension','drain'].includes(C[key]?.kind)?'Type':'Value'}
+function stationLabelsEnabled(key){return labelCategoryKeys().includes(key)&&(settings.stationLabels[key]??defaultLabelsEnabled(key,'station'))}
+function valueLabelsEnabled(key){return labelCategoryKeys().includes(key)&&(settings.valueLabels[key]??defaultLabelsEnabled(key,'value'))}
+function sumLabelsEnabled(key){return labelCategoryKeys().includes(key)&&(settings.sumLabels[key]??defaultLabelsEnabled(key,'sum'))}
 function renderPointLabelControls(){
- $('pointLabels').innerHTML=pointCategoryKeys().map(key=>{
-  const valueChecked=valueLabelsEnabled(key),stationChecked=stationLabelsEnabled(key);
-  const valueLabel=key.endsWith('_structure')||isDrainCategory(key)?'Dimension':'Value';
-  return`<div class="point-label-category"><span>${esc(C[key].group)}: ${esc(C[key].n)}</span><label><input type="checkbox" data-point-label="${esc(key)}" data-label-type="value" ${valueChecked?'checked':''}>${valueLabel}</label><label><input type="checkbox" data-point-label="${esc(key)}" data-label-type="station" ${stationChecked?'checked':''}>Station</label></div>`
+ const selected=labelCategoryKeys();
+ $('labelCategoryAdd').innerHTML=`<option value="">Add category to Labels...</option>${availableLabelCategoryKeys().filter(key=>!selected.includes(key)).map(key=>`<option value="${esc(key)}">${esc(C[key].group)}: ${esc(C[key].n)}</option>`).join('')}`;
+ $('pointLabels').innerHTML=labelCategoryKeys().map(key=>{
+  const valueChecked=valueLabelsEnabled(key),stationChecked=stationLabelsEnabled(key),sumChecked=sumLabelsEnabled(key);
+  return`<div class="point-label-category"><span>${esc(C[key].group)}: ${esc(C[key].n)}</span><label><input type="checkbox" data-point-label="${esc(key)}" data-label-type="value" ${valueChecked?'checked':''}>${categoryValueLabel(key)}</label><label><input type="checkbox" data-point-label="${esc(key)}" data-label-type="station" ${stationChecked?'checked':''}>Station</label><label><input type="checkbox" data-point-label="${esc(key)}" data-label-type="sum" ${sumChecked?'checked':''}>Sum</label><button type="button" class="point-label-remove" data-remove-label-category="${esc(key)}" aria-label="Remove ${esc(C[key].n)} from Labels" title="Remove from Labels">×</button></div>`
  }).join('');
  $('pointLabels').querySelectorAll('[data-point-label]').forEach(input=>input.onchange=()=>{
-  const map=input.dataset.labelType==='value'?settings.valueLabels:settings.stationLabels;
+  const map=input.dataset.labelType==='value'?settings.valueLabels:input.dataset.labelType==='station'?settings.stationLabels:settings.sumLabels;
   map[input.dataset.pointLabel]=input.checked;save();draw()
+ });
+ $('pointLabels').querySelectorAll('[data-remove-label-category]').forEach(button=>button.onclick=()=>{
+  settings.labelCategories=labelCategoryKeys().filter(key=>key!==button.dataset.removeLabelCategory);
+  save();renderPointLabelControls();draw()
  })
+}
+function categorySumLines(key,maxChars=43){
+ const totals=new Map();
+ D.filter(item=>item.c===key).forEach(item=>{
+  const value=String(item.v),id=value.toLocaleLowerCase(),range=Number.isFinite(item.e)&&item.e>item.s;
+  const total=totals.get(id)||{value,quantity:0,range};
+  if(range){total.quantity+=(item.e-item.s)*(hasRoadSideCategory(key)&&item.side==='BS'?2:1);total.range=true}
+  else total.quantity++;
+  totals.set(id,total)
+ });
+ const entries=[...totals.values()].map(total=>{
+  const quantity=total.range?total.quantity>=1000?`${(total.quantity/1000).toFixed(1)} km`:`${Math.round(total.quantity)} m`:String(total.quantity);
+  return`${total.value}: ${quantity}`
+ }),lines=[]; let line='';
+ entries.forEach(entry=>{
+  const addition=`${line?' · ':''}${entry}`;
+  if(line.length+addition.length>maxChars&&line){lines.push(line);line=`  ${entry}`}
+  else line+=addition
+ });
+ if(line)lines.push(line);
+ return lines
 }
 function symbolForItem(d){
  const cfg=C[d.c];if(!cfg)return'';
@@ -319,20 +365,44 @@ function symbolForItem(d){
 function pointItems(key){return key==='ex_settlement'?D.filter(d=>d.c==='ex_landmark'):D.filter(d=>d.c===key)}
 function diagramItems(key){return D.filter(d=>d.c===key||(key==='ex_settlement'&&d.c==='ex_landmark'))}
 function pointLabelLayout(key,scale,items=pointItems(key),minStation=D.length?Math.min(...D.map(item=>item.s)):0){
- const lanes=[-Infinity,-Infinity],positions=new Map(),omitted=new Set();
+ const lanes=[],positions=new Map();
  items.slice().sort((a,b)=>a.s-b.s).forEach(item=>{
   const X=10+(item.s-minStation)/scale,spacing=item.c==='ex_landmark'?Math.min(150,Math.max(46,String(item.v).length*6+18)):46;
   let lane=lanes.findIndex(last=>X-last>=spacing);
-  if(lane<0){omitted.add(item._id);return}
+  if(lane<0)lane=lanes.length;
   lanes[lane]=X;positions.set(item._id,lane)
  });
- return{positions,omitted,count:lanes.filter(Number.isFinite).length}
+ return{positions,count:lanes.filter(Number.isFinite).length}
+}
+function spreadStationPositions(stations,stationX,spacing=18){
+ const positions=new Map();let previous=-Infinity;
+ [...new Set(stations)].sort((a,b)=>a-b).forEach(station=>{
+  const labelX=Math.max(stationX(station),previous+spacing);
+  positions.set(station,labelX);previous=labelX
+ });
+ return positions
+}
+function spreadStructureValuePositions(items,stationX,spacing=18){
+ const positions=new Map();let previous=-Infinity;
+ items.slice().sort((a,b)=>a.s-b.s||a._id.localeCompare(b._id)).forEach(item=>{
+  const labelX=Math.max(stationX(item.s),previous+spacing);
+  positions.set(item._id,labelX);previous=labelX
+ });
+ return positions
+}
+function spreadDrainValuePositions(items,stationX,spacing=6){
+ const positions=new Map();let previousRight=-Infinity;
+ items.filter(item=>item.dim&&Number.isFinite(item.e)).slice().sort((a,b)=>(a.s+a.e)-(b.s+b.e)||a._id.localeCompare(b._id)).forEach(item=>{
+  const width=Math.max(16,String(item.dim).length*5.5),start=stationX(item.s),midpoint=(start+stationX(item.e))/2,labelX=Math.max(midpoint,start+width/2,previousRight+spacing+width/2);
+  positions.set(item._id,labelX);previousRight=labelX+width/2
+ });
+ return{positions,right:Math.max(0,previousRight)}
 }
 function legendEntries(){
  const entries=[],seen=new Set();let hasFwdLegend=false;
  D.forEach(d=>{
-  const cfg=C[d.c];if(!cfg)return;
-  const drain=cfg.kind==='drain';
+  const cfg=C[d.c];if(!cfg||deletedCategories.has(d.c))return;
+   const drain=cfg.kind==='drain',roadSide=hasRoadSideCategory(d.c);
   if(cfg.kind==='fwd'){
    if(!hasFwdLegend){
     hasFwdLegend=true;
@@ -340,13 +410,13 @@ function legendEntries(){
    }
    return
   }
-  if(!['point','landmark'].includes(cfg.mode)&&!drain)return;
-  const key=`${d.c}:${d.v}`;if(seen.has(key))return;seen.add(key);
+  if(deletedCategories.has(d.c)||!['point','landmark'].includes(cfg.mode)&&!roadSide)return;
+  const key=`${d.c}:${String(d.v).toLocaleLowerCase()}`;if(seen.has(key))return;seen.add(key);
   const symbol=drain?'':symbolForItem(d);
   const shortGroup=cfg.group==='Existing'?'Ex':cfg.group==='Design'?'De':cfg.group;
   const label=drain?`${shortGroup} Side Drain - ${d.v}`:cfg.mode==='landmark'?String(d.v):`${shortGroup} ${cfg.n} - ${d.v}`;
   const cluster=cfg.mode==='landmark'?0:/_structure$/.test(d.c)?1:drain?3:2;
-  entries.push({key,symbol,color:col(d.c,d.v),label,width:drain?38+label.length*5.7:26+label.length*5.7,drain,drainColor:drain?(cfg.group==='Existing'?'#7393B3':'#00FFFF'):'',drainStyle:drain?sideDrainStyle(d.v):'',cluster,group:cfg.group,name:cfg.n,value:d.v})
+  entries.push({key,symbol,color:col(d.c,d.v),label,width:roadSide?38+label.length*5.7:26+label.length*5.7,drain,roadSide,drainColor:drain?(cfg.group==='Existing'?'#7393B3':'#00FFFF'):'',drainStyle:drain?sideDrainStyle(d.v):'',cluster,group:cfg.group,name:cfg.n,value:d.v})
  });
  entries.sort((a,b)=>a.cluster-b.cluster||a.group.localeCompare(b.group)||a.name.localeCompare(b.name)||String(a.value).localeCompare(String(b.value)));
  return entries
@@ -371,24 +441,29 @@ function sideDrainLines(x1,x2,y,color,style,scale=1){
  return svg
 }
 function diagramLabel(text,x,y,options={}){
- const vertical=options.vertical===true,rotation=vertical?` transform="rotate(-90 ${x} ${y})"`:'',className=options.id?` class="drag-label" data-label-id="${esc(options.id)}" data-vertical="${vertical}"`:'',size=options.size||9,anchor=options.anchor||'middle';
- return`<text${className}${options.id?` data-base-x="${x}" data-base-y="${y}"`:''}${rotation} x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" font-size="${size}" style="fill:${options.fill||'var(--tx)'}">${esc(text)}</text>`
+ const vertical=options.vertical===true,rotation=vertical?` transform="rotate(-90 ${x} ${y})"`:'',size=options.size||9,anchor=options.anchor||'middle';
+ return`<text${rotation} x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" font-size="${size}" style="fill:${options.fill||'var(--tx)'}">${esc(text)}</text>`
 }
 function draw(){
  const sc=+$('scale').value;$('sc').textContent=sc;
- const minStation=D.length?Math.min(...D.map(d=>d.s)):0,maxStation=D.length?Math.max(...D.map(d=>d.e??d.s)):1000,LW=130,T=44,x=m=>10+(m-minStation)/sc,baseW=Math.max(1000,Math.ceil((maxStation-minStation)/sc))+40;
+ const minStation=D.length?Math.min(...D.map(d=>d.s)):0,maxStation=D.length?Math.max(...D.map(d=>d.e??d.s)):1000,T=44,x=m=>10+(m-minStation)/sc,baseW=Math.max(1000,Math.ceil((maxStation-minStation)/sc))+40;
+ const colorStripHeight=28;
  let Y0=T;const rows=[];
  CATEGORY_GROUPS.forEach(group=>{
   rows.push({group,y:Y0,h:24});Y0+=24;
-  (CATEGORY_ORDER[group]||K().filter(k=>C[k].group===group)).filter(k=>C[k]?.group===group&&!C[k].hidden&&!C[k].diagramHidden).concat(K().filter(k=>C[k].group===group&&!CATEGORY_ORDER[group]?.includes(k)&&!C[k].hidden&&!C[k].diagramHidden)).forEach(k=>{
-   const labelKey=k==='ex_settlement'?'ex_landmark':k,pointItemsForRow=D.filter(item=>item.c===k&&(isDrainCategory(k)||item.e==null)),hasPointItems=pointItemsForRow.length>0;
+  (CATEGORY_ORDER[group]||K().filter(k=>C[k].group===group)).filter(k=>C[k]?.group===group&&!deletedCategories.has(k)&&!C[k].hidden&&!C[k].diagramHidden).concat(K().filter(k=>C[k].group===group&&!CATEGORY_ORDER[group]?.includes(k)&&!deletedCategories.has(k)&&!C[k].hidden&&!C[k].diagramHidden)).forEach(k=>{
+   const labelKey=k,pointItemsForRow=D.filter(item=>item.c===k&&(isDrainCategory(k)||item.e==null)),hasPointItems=pointItemsForRow.length>0;
    const layout=['point','landmark'].includes(C[k].mode)||k==='ex_settlement'||isDrainCategory(k)?pointLabelLayout(k,sc,pointItemsForRow):hasPointItems?pointLabelLayout(k,sc,pointItemsForRow):{count:0};
-   const isPointRow=C[k].mode==='point'||C[k].mode==='landmark'||k==='ex_settlement',isDrainRow=isDrainCategory(k),hasPointLabels=isPointRow&&(valueLabelsEnabled(labelKey)||stationLabelsEnabled(labelKey)),hasDrainLabels=isDrainRow&&(valueLabelsEnabled(labelKey)||stationLabelsEnabled(labelKey)),fwdItems=C[k].kind==='fwd'?D.filter(item=>item.c===k):[],fwdValues=fwdItems.flatMap(item=>[Number.parseFloat(item.v),Number.parseFloat(item.dim)]).filter(Number.isFinite),fwdValueMin=Math.min(...fwdValues),fwdValueMax=Math.max(...fwdValues),fwdPadding=Math.max(10,(fwdValueMax-fwdValueMin)*.1),fwdMin=fwdValues.length?Math.max(0,fwdValueMin-fwdPadding):0,fwdMax=fwdValues.length?fwdValueMax+fwdPadding:1;
-   const h=hasPointLabels?52+Math.max(0,layout.count-1)*11:44;
-   const o={k,y:Y0,h:C[k].kind==='fwd'?132:hasDrainLabels?Math.max(h,68):h,layout,fwdScale:C[k].kind==='fwd'?{min:fwdMin,max:fwdMax}:undefined};Y0+=o.h;rows.push(o)
+   const isPointRow=C[k].mode==='point'||C[k].mode==='landmark'||k==='ex_settlement',isDrainRow=isDrainCategory(k),hasPointLabels=isPointRow&&(valueLabelsEnabled(labelKey)||stationLabelsEnabled(labelKey)||k==='ex_settlement'&&(valueLabelsEnabled('ex_landmark')||stationLabelsEnabled('ex_landmark'))),hasDrainLabels=isDrainRow&&(valueLabelsEnabled(labelKey)||stationLabelsEnabled(labelKey)),fwdItems=C[k].kind==='fwd'?D.filter(item=>item.c===k):[],fwdValues=fwdItems.flatMap(item=>[Number.parseFloat(item.v),Number.parseFloat(item.dim)]).filter(Number.isFinite),fwdValueMin=Math.min(...fwdValues),fwdValueMax=Math.max(...fwdValues),fwdPadding=Math.max(10,(fwdValueMax-fwdValueMin)*.1),fwdMin=fwdValues.length?Math.max(0,fwdValueMin-fwdPadding):0,fwdMax=fwdValues.length?fwdValueMax+fwdPadding:1;
+   const isStructure=/_structure$/.test(k),stationItems=diagramItems(k).filter(item=>Number.isFinite(item.e)?stationLabelsEnabled(k):stationLabelsEnabled(item.c)),stationValues=stationItems.flatMap(item=>Number.isFinite(item.e)?[item.s,item.e]:[item.s]),stationPositions=isStructure||isDrainRow?spreadStationPositions(stationValues,x,isStructure?18:14):new Map([...new Set(stationValues)].map(station=>[station,x(station)])),structureValuePositions=isStructure&&valueLabelsEnabled(k)?spreadStructureValuePositions(pointItemsForRow,x):new Map(),drainValueLayout=isDrainRow&&valueLabelsEnabled(k)?spreadDrainValuePositions(pointItemsForRow,x):{positions:new Map(),right:0};
+   const sums=[];
+   if(sumLabelsEnabled(k))sums.push(...categorySumLines(k));
+   if(k==='ex_settlement'&&sumLabelsEnabled('ex_landmark'))sums.push(...categorySumLines('ex_landmark'));
+   const valueLabelHeight=Math.max(0,...pointItemsForRow.map(item=>String(item.dim||'').length*5)),stationLabelHeight=Math.max(0,...stationValues.map(station=>fmt(station).length*4.5)),showValue=valueLabelsEnabled(k),showStation=stationLabelsEnabled(k),stationZone=showStation&&stationValues.length?Math.ceil(stationLabelHeight)+6:0,structureLabelHeight=showValue||showStation?Math.max(84,showValue?40+2*valueLabelHeight:0,showStation?40+2*stationLabelHeight:0):44,isFwd=C[k].kind==='fwd',contentHeight=isStructure?structureLabelHeight:isDrainRow?44:hasRoadSideCategory(k)?showValue?52:44:hasPointLabels?52:isFwd?56+16+(showValue?16:0):C[k].mode==='range'?colorStripHeight+16+(showValue?18:0):44,roadSideHeight=showStation&&stationValues.length?2*(Math.ceil(stationLabelHeight)+4):0;
+   const stationRight=Math.max(0,...stationPositions.values(),...structureValuePositions.values(),drainValueLayout.right),rowHeight=isStructure?structureLabelHeight:isDrainRow?Math.max(contentHeight,roadSideHeight,44):hasRoadSideCategory(k)?Math.max(contentHeight,roadSideHeight,44):contentHeight+stationZone,o={k,y:Y0,h:rowHeight,layout,stationPositions,structureValuePositions,drainValuePositions:drainValueLayout.positions,showValue,showStation,stationLabelHeight,stationZone,stationRight,fwdScale:C[k].kind==='fwd'?{min:fwdMin,max:fwdMax}:undefined};Y0+=o.h;rows.push(o)
   })
  });
- const legend=legendEntries(),legendTop=Y0+10,legendRows=(()=>{let rows=1,width=78;legend.forEach(entry=>{if(width+entry.width>EXPORT_PAGE_WIDTH-16&&width>78){rows++;width=78}width+=entry.width});return rows})(),W=Math.max(baseW,EXPORT_PAGE_WIDTH),H=legendTop+22+legendRows*18;
+ const legend=legendEntries(),legendTop=Y0+10,legendRows=(()=>{let rows=1,width=78;legend.forEach(entry=>{if(width+entry.width>EXPORT_PAGE_WIDTH-16&&width>78){rows++;width=78}width+=entry.width});return rows})(),stationLabelExtent=Math.max(0,...rows.map(row=>row.stationRight||0)),W=Math.max(baseW,EXPORT_PAGE_WIDTH,Math.ceil(stationLabelExtent+24)),H=legendTop+22+legendRows*18;
  const step=[1000,5000,10000,20000,50000].find(s=>s/sc>=70)||100000;
  let b=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`;
  rows.forEach(r=>{if(r.k)b+=`<rect x="10" y="${r.y}" width="${W-30}" height="${r.h}" fill="none" stroke="var(--ln)"/>`});
@@ -398,7 +473,10 @@ function draw(){
   else if(1000/sc>=6)b+=`<line x1="${X}" x2="${X}" y1="${T-6}" y2="${T}" stroke="var(--mu)"/>`}
  );
  rows.forEach(r=>{if(!r.k)return;const k=r.k;
-  if(isDrainCategory(k))b+=`<line x1="10" x2="${Math.max(10,x(maxStation))}" y1="${r.y+r.h/2}" y2="${r.y+r.h/2}" stroke="var(--mu)" stroke-width=".8" stroke-dasharray="3 4" opacity=".55"><title>Road centerline</title></line>`;
+  if(hasRoadSideCategory(k)){
+   const centerY=r.y+r.h/2;
+   b+=`<line x1="10" x2="${Math.max(10,x(maxStation))}" y1="${centerY}" y2="${centerY}" stroke="var(--mu)" stroke-width=".8" stroke-dasharray="3 4" opacity=".55"><title>Road centerline</title></line>`
+  }
   diagramItems(k).sort((a,b)=>a.s-b.s).forEach(d=>{
    const cfg=C[k],X=x(d.s),Y=r.y+r.h/2,lane=r.layout.positions?.get(d._id)||0;
    if(isRange(k,d.v)&&Number.isFinite(d.e)){
@@ -407,68 +485,83 @@ function draw(){
      const legacyKey=k==='ex_pavement'?'ex_width':'ds_width',legacy=D.filter(item=>item.c===legacyKey&&item.s<d.e&&item.e>d.s);
      const segments=d.roadWidth?[{s:d.s,e:d.e,width:d.roadWidth}]:legacy.length?legacy.map(item=>({s:Math.max(d.s,item.s),e:Math.min(d.e,item.e),width:item.v})):[{s:d.s,e:d.e,width:''}];
      segments.forEach(segment=>{
-      const start=x(segment.s),end=x(segment.e),widthValue=Number.parseFloat(String(segment.width).replace(/[^\d.]/g,'')),thickness=Math.max(3,Math.min(40,(Number.isFinite(widthValue)?widthValue:6)*1.5));
+      const start=x(segment.s),end=x(segment.e),widthValue=Number.parseFloat(String(segment.width).replace(/[^\d.]/g,'')),thickness=Math.max(2,Math.min(18,(Number.isFinite(widthValue)?widthValue:6)*.9));
       const widthLabel=String(segment.width).replace(/\s*m\s*$/i,'').trim(),label=`${normalizePavement(d.v)}${widthLabel?`, ${widthLabel}m`:''}`;
       const top=Y-thickness/2;
       b+=`<rect x="${start}" y="${top}" width="${Math.max(1,end-start)}" height="${thickness}" fill="${f}" stroke="${ink(f)}" stroke-width="1.5"><title>${esc(label)}: ${fmt(segment.s)} – ${fmt(segment.e)}</title></rect>`;
-      if(end-start>24)b+=diagramLabel(label,(start+end)/2,Y,{size:9,fill:ink(f)})
+      if(valueLabelsEnabled(k)&&end-start>24)b+=diagramLabel(label,(start+end)/2,Y,{size:9,fill:ink(f)})
      })
     }else if(k==='boundary'){
-     const end=x(d.e),center=(X+end)/2,label=String(d.v||''),lineY=Y+7,textWidth=Math.min(end-X-8,Math.max(14,label.length*6+8)),half=Math.max(7,textWidth/2);
+     const end=x(d.e),center=(X+end)/2,label=String(d.v||''),lineY=Y+7,textWidth=Math.max(14,label.length*6+8),half=10;
      b+=`<line x1="${X}" x2="${end}" y1="${lineY}" y2="${lineY}" stroke="#374151" stroke-width="1.5"><title>${esc(label)}: ${fmt(d.s)} – ${fmt(d.e)}</title></line>`;
      b+=`<line x1="${X}" x2="${X}" y1="${lineY-7}" y2="${lineY+7}" stroke="#374151" stroke-width="1.5"/><line x1="${end}" x2="${end}" y1="${lineY-7}" y2="${lineY+7}" stroke="#374151" stroke-width="1.5"/>`;
      b+=`<path d="M${X} ${lineY}l7 -3v6z M${end} ${lineY}l-7 -3v6z" fill="#374151"/>`;
-     b+=`<rect x="${center-7}" y="${lineY-half}" width="14" height="${half*2}" fill="var(--card)"/>${diagramLabel(label,center,lineY,{size:10})}`
+     b+=`<rect x="${center-textWidth/2}" y="${lineY-half}" width="${textWidth}" height="${half*2}" fill="var(--card)"/>${diagramLabel(label,center,lineY,{size:10})}`
     }else if(cfg.kind==='fwd'){
-     const toY=value=>r.y+r.h-16-(value-r.fwdScale.min)/(r.fwdScale.max-r.fwdScale.min||1)*(r.h-32),measured=Number.parseFloat(d.v),baseline=Number.parseFloat(d.dim),end=x(d.e);
+     const plotTop=r.y+8+(r.showValue?14:0),plotBottom=r.y+r.h-8-r.stationZone,toY=value=>plotBottom-(value-r.fwdScale.min)/(r.fwdScale.max-r.fwdScale.min||1)*(plotBottom-plotTop),measured=Number.parseFloat(d.v),baseline=Number.parseFloat(d.dim),end=x(d.e);
      const measuredY=toY(measured),baselineY=toY(baseline),color=Number.isFinite(baseline)?measured>=baseline?'#16a34a':'#dc2626':'#2563eb',status=Number.isFinite(baseline)?measured>=baseline?'Pass':'Fail':'';
      if(Number.isFinite(baseline))b+=`<line x1="${X}" x2="${end}" y1="${baselineY}" y2="${baselineY}" stroke="#808080" stroke-width="1.5" stroke-dasharray="7 4"><title>Base Line ${esc(d.dim)}: ${fmt(d.s)} – ${fmt(d.e)}</title></line>`;
      b+=`<line x1="${X}" x2="${end}" y1="${measuredY}" y2="${measuredY}" stroke="${color}" stroke-width="2.5"><title>FWD ${esc(d.v)}${status?' · '+status:''}: ${fmt(d.s)} – ${fmt(d.e)}</title></line>`;
      const prior=D.find(item=>item.c===k&&item.e===d.s);
      if(prior)b+=`<line x1="${X}" x2="${X}" y1="${toY(Number.parseFloat(prior.v))}" y2="${measuredY}" stroke="#808080" stroke-width="2.5"/>`;
-     b+=diagramLabel(d.v,(X+end)/2,measuredY-7,{size:8});
-     if(Number.isFinite(baseline))b+=diagramLabel(`Base ${d.dim}`,(X+end)/2,baselineY+7,{size:8,fill:'#808080'});
+     if(valueLabelsEnabled(k)){
+      const labelGap=Math.abs(measuredY-baselineY)<26&&w>60?Math.min(24,w*.15):0;
+      b+=diagramLabel(d.v,(X+end)/2-labelGap,measuredY-7,{size:8});
+      if(Number.isFinite(baseline))b+=diagramLabel(`Base ${d.dim}`,(X+end)/2+labelGap,baselineY+7,{size:8,fill:'#808080'});
+     }
     }else if(isDrainCategory(k)){
      const drainColor=drainColorForCategory(k),drainStyle=sideDrainStyle(d.v);
      const sides=d.side==='BS'?[-9,9]:[d.side==='RHS'?9:-9],sideName=d.side||'LHS';
      sides.forEach(offset=>{
       b+=`<g>${sideDrainLines(X,X+w,Y+offset,drainColor,drainStyle)}<title>${esc(d.v)} (${sideName})${d.dim?' · '+esc(d.dim):''}: ${fmt(d.s)} – ${fmt(d.e)}</title></g>`
      })
-     if(valueLabelsEnabled(k)&&d.dim&&!r.layout.omitted?.has(d._id)){
-      const labelX=X+w/2+(lane?12:-12),offset=settings.labelOffsets[`${d._id}:dimension`]||{x:0,y:0},sideY=d.side==='RHS'?Y+20:Y-18,labelY=sideY;
-      if(lane>0)b+=`<line x1="${X+w/2}" y1="${Y+(d.side==='RHS'?9:-9)}" x2="${labelX+(offset.x||0)}" y2="${labelY+(offset.y||0)}" stroke="var(--mu)" stroke-width=".7"/>`;
-      b+=diagramLabel(d.dim,labelX+(offset.x||0),labelY+(offset.y||0),{id:`${d._id}:dimension`,size:9});
+     if(valueLabelsEnabled(k)&&d.dim){
+      const labelX=r.drainValuePositions.get(d._id)??X+w/2,labelY=d.side==='RHS'?Y+4:Y-18;
+      b+=diagramLabel(d.dim,labelX,labelY,{size:9});
      }
-     if(stationLabelsEnabled(k)&&!r.layout.omitted?.has(d._id)){
-      const labelX=X+(lane?12:-12),labelY=r.y+r.h-9,offset=settings.labelOffsets[`${d._id}:station`]||{x:0,y:0},stationY=labelY+(offset.y||0);
-      if(lane>0)b+=`<line x1="${X}" y1="${Y+(d.side==='RHS'?9:-9)}" x2="${labelX+(offset.x||0)}" y2="${stationY-5}" stroke="var(--mu)" stroke-width=".7"/>`;
-      b+=diagramLabel(fmt(d.s),labelX+(offset.x||0),stationY,{id:`${d._id}:station`,size:8,vertical:true})
-     }
+    }else if(hasRoadSideCategory(k)){
+     const side=d.side||'LHS',offsets=side==='BS'?[-9,9]:[side==='RHS'?9:-9];
+     offsets.forEach(offset=>b+=`<g>${sideDrainLines(X,X+w,Y+offset,f,'solid')}<title>${esc(d.v)} (${side}): ${fmt(d.s)} – ${fmt(d.e)}</title></g>`);
+     const sideLabel=`${d.v} (${side})`;
+     if(valueLabelsEnabled(k)&&w>Math.max(32,sideLabel.length*6+8))b+=diagramLabel(sideLabel,(X+x(d.e))/2,Y+(side==='RHS'?19:-19),{size:9,fill:ink(f)})
     }else{
-     b+=`<rect x="${X}" y="${r.y+6}" width="${w}" height="${r.h-12}" fill="${f}" stroke="#0003" stroke-width=".5"><title>${esc(d.v)}: ${fmt(d.s)} – ${fmt(d.e)}</title></rect>`;
+     b+=`<rect x="${X}" y="${Y-colorStripHeight/2}" width="${w}" height="${colorStripHeight}" fill="${f}" stroke="#0003" stroke-width=".5"><title>${esc(d.v)}: ${fmt(d.s)} – ${fmt(d.e)}</title></rect>`;
      if(k==='ex_settlement'){
       const landmarks=D.filter(item=>item.c==='ex_landmark'&&item.s>=d.s&&item.s<=d.e),center=X+w/2;
       const collision=landmarks.some(item=>Math.abs(x(item.s)-center)<32),labelX=collision?(x(landmarks[0].s)<center?X+w*.72:X+w*.28):center;
-      if(w>32)b+=diagramLabel(d.v,labelX,Y,{size:10,fill:ink(f)})
-     }else if(w>d.v.length*6+8)b+=diagramLabel(d.v,X+w/2,Y,{size:10,fill:ink(f)})
+      if(valueLabelsEnabled(k)&&w>32)b+=diagramLabel(d.v,labelX,Y,{size:10,fill:ink(f)})
+     }else if(valueLabelsEnabled(k)&&w>d.v.length*6+8)b+=diagramLabel(d.v,X+w/2,Y,{size:10,fill:ink(f)})
     }
    }else{
-       const symbol=symbolForItem(d),href=symbol&&(symbol.startsWith('data:')?symbol:symbol.startsWith('symbols/')?symbol:`symbols/${encodeURIComponent(symbol).replace(/%20/g,'%20')}`),structure=d.c==='ex_structure'||d.c==='ds_structure',landmark=d.c==='ex_landmark',symbolWidth=href?(structure?20:12):6,symbolHeight=href?(structure?21:15):6,valueEnabled=valueLabelsEnabled(d.c),stationEnabled=stationLabelsEnabled(d.c),laneCount=r.layout.count,iconY=r.y+(valueEnabled?25+Math.max(0,laneCount-1)*11:16);
+       const symbol=symbolForItem(d),href=symbol&&(symbol.startsWith('data:')?symbol:symbol.startsWith('symbols/')?symbol:`symbols/${encodeURIComponent(symbol).replace(/%20/g,'%20')}`),structure=d.c==='ex_structure'||d.c==='ds_structure',landmark=d.c==='ex_landmark',symbolWidth=href?(structure?20:12):6,symbolHeight=href?(structure?21:15):6,valueEnabled=valueLabelsEnabled(d.c),iconY=r.y+r.h/2;
        if(href)b+=`<image href="${esc(href)}" x="${X-symbolWidth/2}" y="${iconY-symbolHeight/2}" width="${symbolWidth}" height="${symbolHeight}" preserveAspectRatio="xMidYMid meet"><title>${esc(d.v)}${d.dim?' · '+esc(d.dim):''}${landmark?'':' at '+fmt(d.s)}</title></image>`;
        else b+=`<circle cx="${X}" cy="${iconY}" r="3" fill="${col(k,d.v)}" stroke="#111"><title>${esc(d.v)} at ${fmt(d.s)}</title></circle>`;
        const pointLabel=structure?(d.dim||''):d.v;
-       if(valueEnabled&&pointLabel&&!r.layout.omitted?.has(d._id)){
-        const labelY=r.y+10,offset=settings.labelOffsets[`${d._id}:value`]||{x:0,y:0};
-        const labelX=X+(lane?12:-12)+(offset.x||0),labelYWithOffset=labelY+(offset.y||0);
-        if(lane>0)b+=`<line x1="${X}" y1="${iconY}" x2="${labelX}" y2="${labelYWithOffset+5}" stroke="var(--mu)" stroke-width=".7"/>`;
-        b+=diagramLabel(pointLabel,labelX,labelYWithOffset,{id:`${d._id}:value`,size:9,vertical:structure})
+       if(valueEnabled&&pointLabel){
+        const labelY=r.y+4,labelX=structure?r.structureValuePositions.get(d._id)??X:X+(lane?12:-12);
+        if(structure)b+=`<path d="M${X} ${iconY-symbolHeight/2} L${labelX} ${labelY+String(pointLabel).length*4.5}" fill="none" stroke="var(--mu)" stroke-width=".7"/>`;
+        else if(lane>0)b+=`<line x1="${X}" y1="${iconY}" x2="${labelX}" y2="${labelY+5}" stroke="var(--mu)" stroke-width=".7"/>`;
+        b+=diagramLabel(pointLabel,labelX,labelY,{size:9,vertical:structure,anchor:structure?'end':'middle'})
        }
-       if(stationEnabled&&!r.layout.omitted?.has(d._id)){
-        const labelY=r.y+r.h-6,offset=settings.labelOffsets[`${d._id}:station`]||{x:0,y:0},labelX=X+(lane?12:-12)+(offset.x||0),labelYWithOffset=labelY+(offset.y||0);
-        if(lane>0)b+=`<line x1="${X}" y1="${iconY}" x2="${labelX}" y2="${labelYWithOffset-5}" stroke="var(--mu)" stroke-width=".7"/>`;
-        b+=diagramLabel(fmt(d.s),labelX,labelYWithOffset,{id:`${d._id}:station`,size:8,vertical:structure})
-       }
-   }})});
+       if(stationLabelsEnabled(d.c)&&structure)b+=`<path d="M${X} ${iconY+symbolHeight/2} L${r.stationPositions.get(d.s)??X} ${r.y+r.h-4-fmt(d.s).length*4.5}" fill="none" stroke="var(--mu)" stroke-width=".7"/>`;
+   }})
+  if(r.stationPositions.size){
+   const isStructureRow=/_structure$/.test(k),isDrainRow=isDrainCategory(k),stationY=isDrainRow?r.y+r.h/2+r.stationLabelHeight+2:r.y+r.h-3;
+   r.stationPositions.forEach((labelX,station)=>{
+    b+=diagramLabel(fmt(station),labelX,stationY,{size:8,vertical:true,anchor:'start'})
+   })
+   if(isDrainRow){
+    const endpointOffsets=new Map(),centerY=r.y+r.h/2;
+    diagramItems(k).forEach(item=>[item.s,item.e].filter(Number.isFinite).forEach(station=>{
+     const offsets=endpointOffsets.get(station)||new Set();offsets.add(item.side==='RHS'?9:item.side==='BS'?0:-9);endpointOffsets.set(station,offsets)
+    }));
+    endpointOffsets.forEach((offsets,station)=>offsets.forEach(offset=>{
+     const labelX=r.stationPositions.get(station)??x(station),labelY=stationY-fmt(station).length*4.5;
+     b+=`<path d="M${x(station)} ${centerY+offset} L${labelX} ${labelY}" fill="none" stroke="var(--mu)" stroke-width=".7"/>`
+    }))
+   }
+  }
+ });
  b+=`<g class="diagram-legend"><text class="legend-title" x="16" y="${legendTop+26}">Legend</text>`;
  let legendX=78,legendRow=0;
  legend.forEach(entry=>{
@@ -477,46 +570,52 @@ function draw(){
   const href=entry.symbol&&(entry.symbol.startsWith('data:')?entry.symbol:entry.symbol.startsWith('symbols/')?entry.symbol:`symbols/${encodeURIComponent(entry.symbol).replace(/%20/g,'%20')}`);
   if(entry.chartLine)b+=`<line x1="${legendX}" x2="${legendX+20}" y1="${rowY+7}" y2="${rowY+7}" stroke="${entry.lineColor}" stroke-width="2"${entry.lineStyle==='dashed'?' stroke-dasharray="4 3"':''}/>`;
   else if(entry.drain)b+=sideDrainLines(legendX,legendX+20,rowY+7,entry.drainColor,entry.drainStyle,.7);
+  else if(entry.roadSide)b+=sideDrainLines(legendX,legendX+20,rowY+7,entry.color,'solid',.7);
   else if(href)b+=`<image href="${esc(href)}" x="${legendX}" y="${rowY}" width="12" height="15" preserveAspectRatio="${entry.key.startsWith('ex_landmark:')?'xMidYMax meet':'xMidYMid meet'}"/>`;
   else b+=`<circle cx="${legendX+6}" cy="${rowY+7}" r="3" fill="${entry.color}" stroke="#111" stroke-width=".7"/>`;
-  b+=`<text x="${legendX+(entry.drain?25:17)}" y="${rowY+12}" font-size="10">${esc(entry.label)}</text>`;
+  b+=`<text x="${legendX+(entry.roadSide?25:17)}" y="${rowY+12}" font-size="10">${esc(entry.label)}</text>`;
   legendX+=entry.width
  });
  b+='</g>';
- $('bd').innerHTML=b+'</svg>';wireDraggableLabels();
- let h=`<svg width="${LW}" height="${H}" xmlns="http://www.w3.org/2000/svg"><text x="8" y="26" font-size="14" font-weight="700">${esc($('title').value)}</text>`;
- rows.forEach(r=>{if(r.group)h+=`<text x="8" y="${r.y+r.h/2}" font-size="11" font-weight="700" dominant-baseline="middle">${r.group.toUpperCase()}</text>`;else h+=`<text x="14" y="${r.y+r.h/2}" font-size="10" font-weight="600" dominant-baseline="middle">${esc(C[r.k].n)}</text>`});
+ $('bd').innerHTML=b+'</svg>';
+ const widthContext=document.createElement('canvas').getContext('2d'),headerWidths=[{text:$('title').value,size:14,weight:700},...rows.flatMap(row=>{
+  if(row.group)return[{text:row.group.toUpperCase(),size:11,weight:700}];
+  return[{text:C[row.k].n,size:10,weight:600},...(hasRoadSideCategory(row.k)?[{text:'LHS',size:7,weight:400},{text:'RHS',size:7,weight:400}]:[])]
+ })];
+ const LW=Math.ceil(Math.max(0,...headerWidths.map(entry=>{widthContext.font=`${entry.weight} ${entry.size}px system-ui`;return widthContext.measureText(entry.text).width}))+24),headerLeft=14,headerCenter=LW/2;
+ const sumHeaderLines=(lines,maxLines)=>lines.length<=maxLines?lines:[...lines.slice(0,maxLines-1),lines.slice(maxLines-1).join(' · ')],sumHeaderText=(text,x,y)=>{
+  widthContext.font='400 7px system-ui';const width=widthContext.measureText(text).width,maxWidth=Math.max(24,LW-28),fit=width>maxWidth?` textLength="${maxWidth}" lengthAdjust="spacingAndGlyphs"`:'';
+  return`<text x="${x}" y="${y}" text-anchor="start" font-size="7"${fit}>${esc(text)}</text>`
+ };
+ let h=`<svg width="${LW}" height="${H}" xmlns="http://www.w3.org/2000/svg"><text x="${headerLeft}" y="26" font-size="14" font-weight="700">${esc($('title').value)}</text>`;
+ rows.forEach(r=>{
+  if(r.group)h+=`<text x="${headerLeft}" y="${r.y+r.h/2}" font-size="11" font-weight="700" dominant-baseline="middle">${r.group.toUpperCase()}</text>`;
+  else{
+   const sums=[];if(sumLabelsEnabled(r.k))sums.push(...categorySumLines(r.k));if(r.k==='ex_settlement'&&sumLabelsEnabled('ex_landmark'))sums.push(...categorySumLines('ex_landmark'));
+   if(hasRoadSideCategory(r.k)){
+    const lines=sumHeaderLines(sums,2),blockHeight=30+lines.length*8,top=r.y+(r.h-blockHeight)/2;
+    h+=`<text x="${headerLeft}" y="${top+7}" font-size="7">LHS</text><text x="${headerLeft}" y="${top+15}" font-size="10" font-weight="600" dominant-baseline="middle">${esc(C[r.k].n)}</text><text x="${headerLeft}" y="${top+29}" font-size="7">RHS</text>`;
+    lines.forEach((line,index)=>h+=sumHeaderText(line,headerLeft,top+30+(index+1)*8))
+   }else if(sums.length){
+    const lines=sumHeaderLines(sums,3),blockHeight=12+lines.length*8,top=r.y+(r.h-blockHeight)/2;
+    h+=`<text x="${headerLeft}" y="${top+9}" font-size="10" font-weight="600">${esc(C[r.k].n)}</text>`;
+    lines.forEach((line,index)=>h+=sumHeaderText(line,headerLeft,top+17+index*8))
+   }else h+=`<text x="${headerLeft}" y="${r.y+r.h/2}" font-size="10" font-weight="600" dominant-baseline="middle">${esc(C[r.k].n)}</text>`
+  }
+ });
  $('hd').innerHTML=h+'</svg>';
  drawItems();save()}
-function wireDraggableLabels(){
- const svg=$('bd').querySelector('svg');let drag=null;
- const point=event=>{const p=svg.createSVGPoint();p.x=event.clientX;p.y=event.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())};
- svg.addEventListener('pointerdown',event=>{
-  const label=event.target.closest('.drag-label');if(!label)return;
-  event.preventDefault();const p=point(event);
-  drag={label,id:label.dataset.labelId,p,x:Number(label.getAttribute('x')),y:Number(label.getAttribute('y'))};
-  svg.setPointerCapture(event.pointerId)
- });
- svg.addEventListener('pointermove',event=>{
-  if(!drag)return;const p=point(event),x=drag.x+p.x-drag.p.x,y=drag.y+p.y-drag.p.y;
-  drag.label.setAttribute('x',x);drag.label.setAttribute('y',y);
- if(drag.label.dataset.vertical==='true')drag.label.setAttribute('transform',`rotate(-90 ${x} ${y})`);
- settings.labelOffsets[drag.id]={x:x-Number(drag.label.dataset.baseX),y:y-Number(drag.label.dataset.baseY)}
- });
- const end=()=>{if(drag)save();drag=null};
- svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end)
-}
 function populateCategories(selected){
  const group=$('group').value,keys=K().filter(k=>C[k].group===group);
  const ordered=(CATEGORY_ORDER[group]||[]).filter(k=>keys.includes(k)).concat(keys.filter(k=>!(CATEGORY_ORDER[group]||[]).includes(k)));
- $('cat').innerHTML=ordered.filter(k=>!C[k].hidden).map(k=>`<option value="${k}">${esc(C[k].n)}</option>`).join('')+'<option value="__custom">Custom…</option>';
- if(selected&&keys.includes(selected))$('cat').value=selected;
+ $('cat').innerHTML=ordered.filter(k=>!C[k].hidden&&!deletedCategories.has(k)).map(k=>`<option value="${k}">${esc(C[k].n)}</option>`).join('')+'<option value="__custom">Custom…</option>';
+ if(selected&&keys.includes(selected)&&!deletedCategories.has(selected))$('cat').value=selected;
  sel(true)
 }
 function updatePastePlaceholder(category=C[$('cat').value]){
  const mode=category?.mode||$('customMode').value,range=category?.kind==='boundary'||mode==='range'||mode==='mixed';
- const columns=category?.kind==='fwd'?['Start','End','Value','Base Line (MPa)']:isDrainCategory($('cat').value)?['Start','End','Value','Dimension','Side']:range?['Start','End','Value','Dimension']:['Station','Value','Dimension'];
- const example=category?.kind==='fwd'?'0+000\t1+000\t450\t420':isDrainCategory($('cat').value)?'0+000\t1+000\tU-Ditch\t1x2\tLHS':range?'0+000\t1+000\tAC\t7':'1+000\tU-Ditch\t1x2';
+ const valueColumn=categoryValueLabel($('cat').value),columns=category?.kind==='fwd'?['Start','End','Value','Base Line (MPa)']:hasRoadSideCategory($('cat').value)?['Start','End',valueColumn,'Dimension','Side']:range?['Start','End',valueColumn,'Dimension']:['Station',valueColumn,'Dimension'];
+ const example=category?.kind==='fwd'?'0+000\t1+000\t450\t420':isDrainCategory($('cat').value)?'0+000\t1+000\tU-Ditch\t1x2\tLHS':category?.sideAware?'0+000\t1+000\tGuardrail\t\tLHS':range?'0+000\t1+000\tAC\t7':'1+000\tU-Ditch\t1x2';
  $('excelPasteHelp').textContent=`Copy rows for this category from Excel and paste them here (${range?'Range':'Point'} columns, tab-separated: ${columns.join(', ')}).`;
  $('excelPaste').placeholder=`${columns.join('\t')}\n${example}`
 }
@@ -526,18 +625,18 @@ function sel(resetOptions=false){
  $('categoryField').classList.remove('hide');
  $('clr').disabled=isCustom;
  $('customCategory').classList.toggle('hide',!isCustom);
- $('deleteCategory').classList.toggle('hide',!c?.custom);
+ $('deleteCategory').classList.toggle('hide',!c||deletedCategories.has(key)||key==='__custom');
  $('add').classList.toggle('hide',isCustom);
- if(!c){$('dimensionBox').classList.add('hide');$('landmarkFields').classList.add('hide');$('eW').classList.toggle('hide',isCustom&&$('customMode').value==='point');$('tb').innerHTML='';$('cnt').textContent='(0)';return}
+ if(!c){$('dimensionBox').classList.add('hide');$('landmarkFields').classList.add('hide');$('eW').classList.toggle('hide',isCustom&&$('customMode').value==='point');$('drainSideBox').classList.toggle('hide',!isCustom||$('customSideAware').checked===false);$('tb').innerHTML='';$('cnt').textContent='(0)';return}
  $('eW').classList.toggle('hide',c.mode==='point'||c.mode==='landmark');
- $('v').classList.toggle('hide',c.kind==='boundary');
- $('vL').classList.toggle('hide',c.kind==='boundary');
+ $('v').classList.toggle('hide',c.kind==='boundary'||c.kind==='fwd');
+ $('vL').classList.toggle('hide',c.kind==='boundary'||c.kind==='fwd');
  $('landmarkFields').classList.toggle('hide',c.mode!=='landmark');
  $('landmarkCustom').classList.toggle('hide',c.mode!=='landmark'||$('v').value!=='Custom');
  $('dimensionBox').classList.toggle('hide',c.kind!=='dimension'&&c.kind!=='drain'&&c.kind!=='pavement'&&c.kind!=='fwd');
  $('drainCustomBox').classList.toggle('hide',!['ex_drain','ds_drain'].includes(key)||$('v').value!=='Custom');
- $('drainSideBox').classList.toggle('hide',!isDrainCategory(key));
- $('vL').textContent=c.mode==='landmark'?'Landmark type':'Value';
+ $('drainSideBox').classList.toggle('hide',!hasRoadSideCategory(key));
+ $('vL').textContent=c.mode==='landmark'?'Landmark type':categoryValueLabel(key);
  $('dimensionLabel').textContent=c.kind==='pavement'?'Road Width (metres)':c.kind==='fwd'?'Base Line (MPa)':c.kind==='dimension'||c.kind==='drain'?'Dimension (optional)':'';
  $('dimension').type=c.kind==='pavement'||c.kind==='fwd'?'number':'text';
  $('dimension').min=c.kind==='pavement'?'0.1':c.kind==='fwd'?'0':'';
@@ -549,26 +648,31 @@ function sel(resetOptions=false){
    if(c.custom||c.freeValue||c.o.includes('Custom'))values=values.filter(v=>v!=='Custom').concat('Custom');
   $('v').innerHTML=values.map(v=>`<option value="${esc(v)}">${esc(c.kind==='pavement'?pavementListName(v):v)}</option>`).join('')
  }
-  const freeCustomValue=c.kind==='boundary'||c.mode!=='landmark'&&(c.custom||c.freeValue||c.o.includes('Custom'));
+  const freeCustomValue=c.kind==='boundary'||c.kind==='fwd'||c.mode!=='landmark'&&(c.custom||c.freeValue||c.o.includes('Custom'));
  $('vOtherLabel').classList.toggle('hide',!freeCustomValue);
  $('vOtherLabel').textContent=c.kind==='boundary'?'Value':isDrainCategory(key)?'Side drain name':c.kind==='fwd'?'FWD Value (MPa)':c.n+' value';
  $('vOther').type=c.kind==='fwd'?'number':'text';
  $('vOther').min=c.kind==='fwd'?'0':'';
  $('vOther').step=c.kind==='fwd'?'any':'';
  $('vOther').placeholder=c.kind==='boundary'?'Enter boundary/location name':c.kind==='fwd'?'e.g. 1.25':'Enter value';
- $('vOther').classList.toggle('hide',c.kind!=='boundary'&&($('v').value!=='Custom'||!freeCustomValue));
+ $('vOther').classList.toggle('hide',c.kind==='fwd'?false:c.kind!=='boundary'&&($('v').value!=='Custom'||!freeCustomValue));
  drawItems()
 }
 $('group').onchange=()=>populateCategories();
 $('cat').onchange=()=>{sel(true);draw()};
+$('labelCategoryAdd').onchange=()=>{
+ const key=$('labelCategoryAdd').value;if(!key)return;
+ settings.labelCategories=[...labelCategoryKeys(),key];save();renderPointLabelControls();draw()
+};
+$('customSideAware').onchange=()=>{$('drainSideBox').classList.toggle('hide',!$('customSideAware').checked);updatePastePlaceholder()};
 $('v').onchange=()=>sel();
-$('customMode').onchange=()=>{$('eW').classList.toggle('hide',$('customMode').value==='point');updatePastePlaceholder()};
+$('customMode').onchange=()=>{$('eW').classList.toggle('hide',$('customMode').value==='point');$('customSideOption').classList.toggle('hide',$('customMode').value!=='range');if($('customMode').value==='point')$('customSideAware').checked=false;$('drainSideBox').classList.toggle('hide',$('customMode').value==='point'||!$('customSideAware').checked);updatePastePlaceholder()};
 $('landmarkMajor').onchange=()=>{if($('landmarkMajor').checked)$('landmarkMinor').checked=false;else if(!$('landmarkMinor').checked)$('landmarkMajor').checked=true};
 $('landmarkMinor').onchange=()=>{if($('landmarkMinor').checked)$('landmarkMajor').checked=false;else if(!$('landmarkMajor').checked)$('landmarkMajor').checked=true};
 renderPointLabelControls();$('group').value='Existing';populateCategories();$('cat').value='ex_pavement';sel(true);
 $('add').onclick=()=>{
- const c=$('cat').value,cfg=C[c];let value=cfg.kind==='boundary'?$('vOther').value.trim():$('v').value,dim=cfg.kind==='dimension'||cfg.kind==='drain'||cfg.kind==='fwd'?$('dimension').value.trim():'',roadWidth=cfg.kind==='pavement'?String($('dimension').value).trim():'',sym='',importance=$('landmarkMinor').checked?'Minor':'Major';
- const customSelected=cfg.kind!=='boundary'&&value==='Custom';
+ const c=$('cat').value,cfg=C[c];let value=cfg.kind==='boundary'||cfg.kind==='fwd'?$('vOther').value.trim():$('v').value,dim=cfg.kind==='dimension'||cfg.kind==='drain'||cfg.kind==='fwd'?$('dimension').value.trim():'',roadWidth=cfg.kind==='pavement'?String($('dimension').value).trim():'',sym='',importance=$('landmarkMinor').checked?'Minor':'Major';
+ const customSelected=cfg.kind!=='boundary'&&cfg.kind!=='fwd'&&value==='Custom';
  if(customSelected&&cfg.mode==='landmark'){
   value=$('landmarkName').value.trim();if(!value){$('msg').textContent='Enter a landmark name';return}
   const file=$('landmarkSymbol').files[0];
@@ -615,7 +719,7 @@ function importPastedRows(text){
  if(key==='__custom')return{added:0,errors:['Select a category, not Custom, before importing pasted rows']};
  if(!hasHeaders){
   const point=cfg.mode==='point'||cfg.mode==='landmark';
-  columns.start=0;columns.end=point?-1:1;columns.value=point?1:2;columns.dimension=point?2:3;columns.width=point?3:4;columns.importance=point?4:5;if(isDrainCategory(key))columns.side=4
+  columns.start=0;columns.end=point?-1:1;columns.value=point?1:2;columns.dimension=point?2:3;columns.width=point?3:4;columns.importance=point?4:5;if(hasRoadSideCategory(key))columns.side=point?3:4
  }
  const data=hasHeaders?rows.slice(1):rows,pointRows=cfg.mode==='point'||cfg.mode==='landmark'||(hasHeaders&&columns.end<0);
  let added=0;const errors=[];
@@ -624,7 +728,7 @@ function importPastedRows(text){
   const rowNumber=index+(hasHeaders?2:1),cell=name=>columns[name]<0?'':String(row[columns[name]]||'').trim();
   const start=parse(cell('start')),end=parse(cell('end'));
   let value=cell('value'),dimension=cell('dimension'),roadWidth=cell('width')||(cfg.kind==='pavement'?dimension:'');
-  if(!value){errors.push(`Row ${rowNumber}: missing Value`);return}
+  if(!value){errors.push(`Row ${rowNumber}: missing ${categoryValueLabel(key)}`);return}
   if(cfg.mode==='range'&&/^[-+]?\d+(?:\.\d+)?$/.test(value)){
    const unit=cfg.o[0]?.match(/^\s*[-+]?\d+(?:\.\d+)?\s*(.+?)\s*$/)?.[1];
    if(unit)value=`${value} ${unit}`
@@ -657,52 +761,105 @@ function projectSnapshot(){
   category:$('cat').value,
   items:D,
   custom:customCategories,
+  deleted:[...deletedCategories],
   settings
  }
 }
+function projectFileName(){return`${(($('title').value||'Road').trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g,'-').replace(/[. ]+$/g,''))||'Road'}_Diagram.json`}
+function projectBlob(){return new Blob([JSON.stringify(projectSnapshot(),null,2)],{type:'application/json'})}
 function downloadProject(){
- const name=($('title').value||'Road').trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g,'-').replace(/[. ]+$/g,'')||'Road',blob=new Blob([JSON.stringify(projectSnapshot(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');
- link.href=url;link.download=`${name}_Diagram.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
+ const blob=projectBlob(),url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download=projectFileName();link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
+}
+async function saveProjectFile(){
+ if(typeof window.showSaveFilePicker!=='function'){downloadProject();return'downloaded'}
+ const handle=await window.showSaveFilePicker({suggestedName:projectFileName(),types:[{description:'Road Strip Diagram project',accept:{'application/json':['.json']}}]});
+ const writable=await handle.createWritable();await writable.write(projectBlob());await writable.close();return'saved'
+}
+async function writeFileHandle(handle,blob){
+ const writable=await handle.createWritable();await writable.write(blob);await writable.close()
+}
+function encodeBase64Url(bytes){
+ let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
+ return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')
+}
+function decodeBase64Url(value){
+ const binary=atob(value.replace(/-/g,'+').replace(/_/g,'/')),bytes=new Uint8Array(binary.length);
+ for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+ return bytes
+}
+async function transformBytes(bytes,Stream,format){
+ const stream=new Blob([bytes]).stream().pipeThrough(new Stream(format));
+ return new Uint8Array(await new Response(stream).arrayBuffer())
+}
+async function createShareUrl(){
+ const json=JSON.stringify(projectSnapshot()),raw=new TextEncoder().encode(json);
+ let mode='j',payload=raw;
+ if(typeof CompressionStream==='function'){
+  payload=await transformBytes(raw,CompressionStream,'gzip');mode='g'
+ }
+ const url=new URL(location.href);url.hash=`project=${mode}${encodeBase64Url(payload)}`;
+ return url.href
+}
+async function loadSharedProject(){
+ const match=location.hash.match(/^#project=([gj])([A-Za-z0-9_-]+)$/);
+ if(!match){if(location.hash.startsWith('#project='))$('msg').textContent='Unable to load shared project: the link data is invalid';return}
+ try{
+  let bytes=decodeBase64Url(match[2]);
+  if(match[1]==='g'){
+   if(typeof DecompressionStream!=='function')throw Error('This browser cannot open compressed share links; use a recent browser');
+   bytes=await transformBytes(bytes,DecompressionStream,'gzip')
+  }
+  const data=validateProject(JSON.parse(new TextDecoder().decode(bytes)));
+  applyProjectData(data);history.replaceState(null,'',location.pathname+location.search);$('msg').textContent='Shared project loaded successfully'
+ }catch(error){$('msg').textContent='Unable to load shared project: '+error.message}
 }
 function validateProject(project){
  if(!project||typeof project!=='object'||Array.isArray(project)||project.format!=='road-strip-diagram'||project.version!==1)throw Error('This is not a supported Road Strip Diagram project file');
  if(!Array.isArray(project.items)||!Array.isArray(project.custom))throw Error('Project file is missing its items or custom categories');
  const customIds=new Set(),custom=project.custom.map(category=>{
-  if(!category||typeof category.id!=='string'||!/^custom_[\w-]+$/.test(category.id)||typeof category.name!=='string'||!category.name.trim()||!CATEGORY_GROUPS.includes(category.group)||!['range','point'].includes(category.mode))throw Error('Project file contains an invalid custom category');
+  if(!category||typeof category.id!=='string'||!/^custom_[\w-]+$/.test(category.id)||typeof category.name!=='string'||!category.name.trim()||!CATEGORY_GROUPS.includes(category.group)||!['range','point'].includes(category.mode)||category.sideAware!=null&&typeof category.sideAware!=='boolean'||category.sideAware===true&&category.mode!=='range')throw Error('Project file contains an invalid custom category');
   if(customIds.has(category.id)||C[category.id]&&!C[category.id].custom)throw Error(`Project file contains a duplicate category: ${category.id}`);
-  customIds.add(category.id);return{id:category.id,name:category.name.trim(),group:category.group,mode:category.mode}
+  customIds.add(category.id);return{id:category.id,name:category.name.trim(),group:category.group,mode:category.mode,sideAware:category.sideAware===true}
  });
- const known=new Set([...Object.keys(C).filter(key=>!C[key].custom),...customIds]);
+ const known=new Set([...Object.keys(C).filter(key=>!C[key].custom),...customIds]),sideAwareIds=new Set(custom.filter(category=>category.sideAware).map(category=>category.id));
+ if(project.deleted!=null&&(!Array.isArray(project.deleted)||project.deleted.some(id=>typeof id!=='string')))throw Error('Project file contains an invalid deleted category list');
+ const deleted=[...new Set(project.deleted||[])];
+ if(deleted.some(id=>!known.has(id)))throw Error('Project file contains an unknown deleted category');
  const items=project.items.map((item,index)=>{
   if(!item||typeof item!=='object'||typeof item.c!=='string'||!known.has(item.c)||!Number.isFinite(item.s)||item.e!=null&&(!Number.isFinite(item.e)||item.e<=item.s)||item.v==null||String(item.v).trim()==='')throw Error(`Project file contains an invalid item at row ${index+1}`);
   const isFwd=C[item.c]?.kind==='fwd',value=isFwd?normalizeFwd(item.v):String(item.v),baseline=isFwd&&item.dim!=null&&String(item.dim).trim()?normalizeFwd(item.dim):'';
   if(!value)throw Error(`Project file contains an invalid FWD value at row ${index+1}`);
-  const side=isDrainCategory(item.c)?item.side==null?'LHS':item.side:'';
-  if(isDrainCategory(item.c)&&!['LHS','RHS','BS'].includes(side))throw Error(`Project file contains an invalid side at row ${index+1}`);
+  const hasSide=isDrainCategory(item.c)||C[item.c]?.sideAware===true||sideAwareIds.has(item.c),side=hasSide?item.side==null?'LHS':item.side:'';
+  if(hasSide&&!['LHS','RHS','BS'].includes(side))throw Error(`Project file contains an invalid side at row ${index+1}`);
   if(isFwd&&item.dim!=null&&String(item.dim).trim()&&!baseline)throw Error(`Project file contains an invalid FWD Base Line at row ${index+1}`);
-  return{...item,_id:typeof item._id==='string'&&item._id?item._id:makeId(),v:value,...(isFwd?{dim:baseline}:item.dim==null?{dim:undefined}:{dim:String(item.dim)}),...(isDrainCategory(item.c)?{side}:{}),...(item.sym==null?{sym:undefined}:{sym:String(item.sym)})}
+  return{...item,_id:typeof item._id==='string'&&item._id?item._id:makeId(),v:value,...(isFwd?{dim:baseline}:item.dim==null?{dim:undefined}:{dim:String(item.dim)}),...(hasSide?{side}:{}),...(item.sym==null?{sym:undefined}:{sym:String(item.sym)})}
  });
  const raw=project.settings&&typeof project.settings==='object'?project.settings:{};
  const boolMap=value=>Object.fromEntries(Object.entries(value&&typeof value==='object'?value:{}).filter(([,enabled])=>typeof enabled==='boolean'));
- const offsets=Object.fromEntries(Object.entries(raw.labelOffsets&&typeof raw.labelOffsets==='object'?raw.labelOffsets:{}).filter(([,offset])=>offset&&Number.isFinite(offset.x)&&Number.isFinite(offset.y)).map(([id,offset])=>[id,{x:offset.x,y:offset.y}]));
- const settings={stationLabels:boolMap(raw.stationLabels),valueLabels:boolMap(raw.valueLabels),labelOffsets:offsets,theme:['system','light','dark'].includes(raw.theme)?raw.theme:'system'};
+ const defaultLabelCategories=['ex_landmark','ex_structure','ds_structure','ex_drain','ds_drain'];
+ const requestedLabelCategories=Array.isArray(raw.labelCategories)?raw.labelCategories:defaultLabelCategories;
+ const labelCategories=[...new Set(requestedLabelCategories)].filter(key=>known.has(key)&&!deleted.includes(key)&&!C[key]?.hidden);
+ const settings={stationLabels:boolMap(raw.stationLabels),valueLabels:boolMap(raw.valueLabels),sumLabels:boolMap(raw.sumLabels),labelCategories,theme:['system','light','dark'].includes(raw.theme)?raw.theme:'system'};
  const scale=Number(project.scale);
- return{items,custom,settings,title:typeof project.title==='string'?project.title:'Road',scale:Number.isFinite(scale)?Math.max(2,Math.min(200,scale)):40,group:CATEGORY_GROUPS.includes(project.group)?project.group:'Existing',category:typeof project.category==='string'?project.category:''}
+ return{items,custom,deleted,settings,title:typeof project.title==='string'?project.title:'Road',scale:Number.isFinite(scale)?Math.max(2,Math.min(200,scale)):40,group:CATEGORY_GROUPS.includes(project.group)?project.group:'Existing',category:typeof project.category==='string'?project.category:''}
 }
 function registerCustomCategories(categories){
  Object.keys(C).filter(key=>C[key].custom).forEach(key=>delete C[key]);
  customCategories=categories;
- customCategories.forEach(category=>{C[category.id]={...category,n:category.name,o:[],custom:true}})
+ customCategories.forEach(category=>{C[category.id]={...category,n:category.name,o:[],sideAware:category.sideAware===true,custom:true}})
 }
-async function loadProjectFile(file){
- if(!file)return;
- if(file.size>25*1024*1024)throw Error('Project file must be smaller than 25 MB');
- const data=validateProject(JSON.parse(await file.text()));
- D=data.items;settings=data.settings;registerCustomCategories(data.custom);
+function applyProjectData(data){
+ D=data.items;settings=data.settings;registerCustomCategories(data.custom);deletedCategories=new Set(data.deleted);
  $('title').value=data.title;$('scale').value=String(data.scale);applyTheme(settings.theme);
  $('group').value=data.group;populateCategories(data.category);
  if($('cat').value!==data.category)$('cat').selectedIndex=0;
  renderPointLabelControls();draw()
+}
+async function loadProjectFile(file){
+ if(!file)return;
+ if(file.size>25*1024*1024)throw Error('Project file must be smaller than 25 MB');
+ const data=validateProject(JSON.parse(await file.text()));applyProjectData(data)
 }
 function exportPages(){
  draw();const source=$('bd').querySelector('svg'),header=$('hd').querySelector('svg'),width=Number(source.getAttribute('width')),height=Number(source.getAttribute('height')),slice=EXPORT_PAGE_WIDTH,total=Math.max(1,Math.ceil((width-10)/slice));
@@ -713,7 +870,7 @@ function exportPages(){
   const left=header.cloneNode(true),right=source.cloneNode(true);
   left.setAttribute('width',header.getAttribute('width'));left.setAttribute('height',height);
   right.setAttribute('width',slice);right.setAttribute('height',height);right.setAttribute('viewBox',`${page*slice} 0 ${slice} ${height}`);
-  const legend=right.querySelector('.diagram-legend');if(legend&&page)legend.setAttribute('transform',`translate(${page*slice} 0)`);
+  const legend=right.querySelector('.diagram-legend');if(page&&legend)legend.setAttribute('transform',`translate(${page*slice} 0)`)
   chart.append(left,right);wrap.append(chart);
   const number=document.createElement('div');number.className='printNumber';number.textContent=`Page ${page+1} of ${total}`;wrap.append(number);
   $('printPages').append(wrap)
@@ -741,9 +898,20 @@ $('imp').onclick=()=>{
  if(result.errors.length)summary.push(result.errors.join('; '));
  $('msg').textContent=summary.join(' · ')
 };
-$('saveProjectBtn').onclick=()=>{
- try{downloadProject();$('msg').textContent='Project saved as a JSON file'}
- catch(error){$('msg').textContent='Unable to save project: '+error.message}
+$('saveProjectBtn').onclick=async()=>{
+ try{const method=await saveProjectFile();$('msg').textContent=method==='saved'?'Project saved to the selected location':'Project downloaded; choose a save location in your browser if prompted'}
+ catch(error){if(error.name!=='AbortError')$('msg').textContent='Unable to save project: '+error.message}
+};
+$('shareProjectBtn').onclick=async()=>{
+ try{
+  const link=await createShareUrl();let clipboardError='';
+  if(navigator.clipboard?.writeText){
+   try{await navigator.clipboard.writeText(link);$('msg').textContent=link.length>48000?'Share link copied; it is large and some messaging apps may truncate it':'Share link copied to clipboard';return}
+   catch(error){clipboardError=error.message}
+  }
+  if(typeof navigator.share==='function'){await navigator.share({title:$('title').value||'Road Strip Diagram',url:link});$('msg').textContent='Share link sent';return}
+  window.prompt('Copy this project-specific share link:',link);$('msg').textContent=clipboardError?`Clipboard unavailable (${clipboardError}); share link is ready to copy`:'Share link is ready to copy'
+ }catch(error){$('msg').textContent='Unable to create or share project link: '+error.message}
 };
 $('loadProjectBtn').onclick=()=>$('projectFile').click();
 $('projectFile').onchange=async()=>{
@@ -766,26 +934,37 @@ $('gettingStartedClose').onclick=()=>$('gettingStartedDialog').close();
 $('aboutBtn').onclick=()=>$('aboutDialog').showModal();
 $('aboutClose').onclick=()=>$('aboutDialog').close();
 document.querySelectorAll('.menu button,.menu a').forEach(item=>item.addEventListener('click',()=>item.closest('details').removeAttribute('open')));
+document.querySelectorAll('.menu').forEach(menu=>menu.querySelector('summary').addEventListener('click',()=>{
+ if(menu.open)return;
+ document.querySelectorAll('.menu[open]').forEach(openMenu=>{if(openMenu!==menu)openMenu.removeAttribute('open')})
+}));
+document.addEventListener('click',event=>{if(!event.target.closest('.menu'))document.querySelectorAll('.menu[open]').forEach(menu=>menu.removeAttribute('open'))});
+document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.menu[open]').forEach(menu=>menu.removeAttribute('open'))});
 $('rst').onclick=()=>$('resetDialog').showModal();
 $('resetCancel').onclick=()=>$('resetDialog').close();
 function clearDiagram(){
- D=[];settings.labelOffsets={};$('resetDialog').close();$('msg').textContent='Diagram cleared';draw()
+ D=[];$('resetDialog').close();$('msg').textContent='Diagram cleared';draw()
 }
 $('resetOk').onclick=clearDiagram;
-$('resetSave').onclick=()=>{
- try{downloadProject();clearDiagram()}
- catch(error){$('msg').textContent='Unable to save project: '+error.message}
+$('resetSave').onclick=async()=>{
+ try{const method=await saveProjectFile();if(method)clearDiagram()}
+ catch(error){if(error.name!=='AbortError')$('msg').textContent='Unable to save project: '+error.message}
 };
-$('pdf').onclick=()=>{
+function printDiagram(asPdf){
  exportPages();const base=($('title').value||'Road').trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g,'-').replace(/[. ]+$/g,'')||'Road';
- const oldTitle=document.title;document.title=`${base}_Diagram_Page1`;
+ const oldTitle=document.title;document.title=asPdf?`${base}_Diagram_Page1`:`${base}_Diagram`;
  window.addEventListener('afterprint',()=>{document.title=oldTitle},{once:true});window.print()
 };
+ $('print').onclick=()=>printDiagram(false);
+$('pdf').onclick=()=>printDiagram(true);
 $('jpg').onclick=async()=>{
  const count=exportPages(),pages=[...$('printPages').children],roadName=($('title').value||'Road').trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g,'-').replace(/[. ]+$/g,'')||'Road',base=`${roadName}_Diagram`;
  decodedSymbols.clear();
  $('msg').textContent='Preparing JPG export…';
  try{
+  let directory=null,singleFile=null;
+  if(typeof window.showDirectoryPicker==='function')directory=await window.showDirectoryPicker({mode:'readwrite'});
+  else if(count===1&&typeof window.showSaveFilePicker==='function')singleFile=await window.showSaveFilePicker({suggestedName:`${base}_Page1.jpg`,types:[{description:'JPEG image',accept:{'image/jpeg':['.jpg']}}]});
   for(let i=0;i<count;i++){
    const svgs=await Promise.all([...pages[i].querySelectorAll('svg')].map(standaloneSvg)),imgs=await Promise.all(svgs.map(source=>new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(new Blob([source],{type:'image/svg+xml'}));img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Unable to render a symbol for JPG export'))};img.src=url})));
    const height=imgs[0].height,width=imgs.reduce((sum,img)=>sum+img.width,0),canvas=document.createElement('canvas');canvas.width=width*2;canvas.height=(height+36)*2;
@@ -793,33 +972,35 @@ $('jpg').onclick=async()=>{
    imgs.forEach(img=>{ctx.drawImage(img,x,0,img.width*2,height*2);x+=img.width*2});
    ctx.fillStyle='#111';ctx.font='24px sans-serif';ctx.textAlign='center';ctx.fillText(`Page ${i+1} of ${count}`,canvas.width/2,canvas.height-12);
    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.92));if(!blob)throw Error('Could not create JPG image');
-   const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`${base}_Page${i+1}.jpg`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000)
+   const filename=`${base}_Page${i+1}.jpg`;
+   if(directory){const handle=await directory.getFileHandle(filename,{create:true});await writeFileHandle(handle,blob)}
+   else if(singleFile)await writeFileHandle(singleFile,blob);
+   else{const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000)}
   }
-  $('msg').textContent=`Exported ${count} JPG page(s)`
- }catch(e){$('msg').textContent='JPG export failed: '+e.message}
+  $('msg').textContent=directory?'JPG pages saved to the selected folder':`Exported ${count} JPG page(s)`
+ }catch(e){if(e.name==='AbortError')$('msg').textContent='JPG export cancelled';else $('msg').textContent='JPG export failed: '+e.message}
 };
 $('tb').onclick=e=>{const i=e.target.dataset.i;if(i!=null){D.splice(+i,1);draw()}};
 $('clr').onclick=()=>{const c=$('cat').value;if(!C[c])return;if(confirm('Clear all items in '+C[c].n+'?')){D=D.filter(d=>d.c!==c&&!(c==='ex_pavement'&&d.c==='ex_width')&&!(c==='ds_pavement'&&d.c==='ds_width'));draw()}};
 $('customAdd').onclick=()=>{
  const name=$('customName').value.trim(),group=$('group').value;
  if(!name){$('msg').textContent='Enter a custom category name';return}
- if(K().some(k=>C[k].group===group&&C[k].n.toLowerCase()===name.toLowerCase())){$('msg').textContent='That category already exists in '+group;return}
+ if(K().some(k=>!deletedCategories.has(k)&&C[k].group===group&&C[k].n.toLowerCase()===name.toLowerCase())){$('msg').textContent='That category already exists in '+group;return}
  const base='custom_'+Date.now().toString(36);let id=base,suffix=1;
  while(C[id])id=`${base}_${suffix++}`;
- const category={id,name,group,mode:$('customMode').value};
+ const category={id,name,group,mode:$('customMode').value,sideAware:$('customMode').value==='range'&&$('customSideAware').checked};
  customCategories.push(category);C[id]={...category,n:name,o:[],custom:true};save();
  renderPointLabelControls();$('customName').value='';populateCategories(id);$('msg').textContent='';draw()
 };
 $('deleteCategory').onclick=()=>{
  const id=$('cat').value,category=C[id];
- if(!category?.custom)return;
- if(!confirm(`Delete custom category "${category.n}" and all of its items?`))return;
- const itemIds=new Set(D.filter(item=>item.c===id).map(item=>item._id));
- D=D.filter(item=>item.c!==id);customCategories=customCategories.filter(item=>item.id!==id);delete C[id];
- delete settings.stationLabels[id];delete settings.valueLabels[id];
- Object.keys(settings.labelOffsets).forEach(labelId=>{if([...itemIds].some(itemId=>labelId.startsWith(`${itemId}:`)))delete settings.labelOffsets[labelId]});
- populateCategories();renderPointLabelControls();$('msg').textContent=`Deleted ${category.n}`;draw()
+ if(!category||deletedCategories.has(id))return;
+ if(!confirm(`Delete category "${category.n}" and all of its items? This category will be removed from this project.`))return;
+ D=D.filter(item=>item.c!==id);deletedCategories.add(id);
+ delete settings.stationLabels[id];delete settings.valueLabels[id];delete settings.sumLabels[id];
+ settings.labelCategories=labelCategoryKeys().filter(key=>key!==id);
+ save();populateCategories();renderPointLabelControls();$('msg').textContent=`Deleted ${category.n}`;draw()
 };
 $('scale').oninput=draw;$('title').oninput=draw;
-draw();
+window.addEventListener('hashchange',loadSharedProject);draw();loadSharedProject();
 </script></body></html>
