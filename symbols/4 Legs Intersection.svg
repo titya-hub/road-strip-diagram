@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 57.205 51.669">
+  <defs>
+    <style>
+      .cls-1{fill:#ffffff;stroke:#000000;stroke-miterlimit:10}
+      .cls-2{fill:none;stroke:#000000;stroke-miterlimit:10}
+      .cls-3{fill:#ffffff;stroke:#000000;stroke-width:2;stroke-miterlimit:10}
+      .cls-4{fill:none;stroke:#000000;stroke-width:2;stroke-miterlimit:10}
+    </style>
+  </defs>
+  <title>Asset 15</title>
+  <g id="Asset_15" data-name="Asset 15">
+    <path d="M25.836 1 L25.836 19.758" class="cls-1"/>
+    <path d="M50.628 26 L32.086 26" class="cls-2"/>
+    <path d="M0.836 26 L19.586 26" class="cls-2"/>
+    <path d="M25.836 51 L25.836 32.25" class="cls-2"/>
+    <path d="M41.461 5.686" class="cls-3"/>
+    <path d="M19.378 15.247 L19.378 1 L31.878 1 L31.878 15.247 C31.878 17.732 33.893 19.746 36.378 19.746 L50.628 19.746 L50.628 32.25 L36.378 32.25 C33.893 32.25 31.878 34.225 31.878 36.661 L31.878 50.631 L19.378 50.631 L19.378 36.661 C19.378 34.225 17.403 32.25 14.967 32.25 L1 32.25 L1 19.746 L14.967 19.746 C17.403 19.746 19.378 17.732 19.378 15.247 Z" class="cls-4"/>
+    <path d="M57.205 51.669" class="cls-4"/>
+  </g>
+</svg>

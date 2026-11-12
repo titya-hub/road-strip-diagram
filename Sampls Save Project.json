@@ -1,0 +1,746 @@
+{
+  "format": "road-strip-diagram",
+  "version": 1,
+  "title": "NR7-Kizuna-Suong",
+  "scale": 30,
+  "group": "Road Health",
+  "category": "rh_fwd",
+  "items": [
+    {
+      "_id": "item_mwbvcfvj_99dcc6d",
+      "c": "boundary",
+      "s": 122270,
+      "e": 142270,
+      "v": "Tboung Khmum"
+    },
+    {
+      "_id": "item_mwbvcfvj_5q028f5",
+      "c": "boundary",
+      "s": 142270,
+      "e": 150270,
+      "v": "Suong"
+    },
+    {
+      "_id": "item_mwbvd1xi_myrp9qq",
+      "c": "ex_landmark",
+      "s": 136000,
+      "v": "Tboung Khmum",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbvd1xi_4dgulo9",
+      "c": "ex_landmark",
+      "s": 145000,
+      "v": "Suong",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbvjo2v_ong6ztx",
+      "c": "ex_pavement",
+      "s": 122270,
+      "e": 123500,
+      "v": "AC",
+      "roadWidth": "10"
+    },
+    {
+      "_id": "item_mwbvjo2v_xie0n0e",
+      "c": "ex_pavement",
+      "s": 123500,
+      "e": 123900,
+      "v": "DBST",
+      "roadWidth": "10"
+    },
+    {
+      "_id": "item_mwbvjo2v_62i4wc2",
+      "c": "ex_pavement",
+      "s": 123900,
+      "e": 124400,
+      "v": "AC",
+      "roadWidth": "10"
+    },
+    {
+      "_id": "item_mwbvjo2v_45vdpv2",
+      "c": "ex_pavement",
+      "s": 124400,
+      "e": 128000,
+      "v": "DBST",
+      "roadWidth": "10"
+    },
+    {
+      "_id": "item_mwbvjo2v_f70ni5o",
+      "c": "ex_pavement",
+      "s": 128000,
+      "e": 130700,
+      "v": "AC",
+      "roadWidth": "10"
+    },
+    {
+      "_id": "item_mwbvjo2v_1hci8pa",
+      "c": "ex_pavement",
+      "s": 130700,
+      "e": 136000,
+      "v": "DBST",
+      "roadWidth": "10"
+    },
+    {
+      "_id": "item_mwbvjo2v_6jiweiq",
+      "c": "ex_pavement",
+      "s": 136000,
+      "e": 143000,
+      "v": "AC",
+      "roadWidth": "10"
+    },
+    {
+      "_id": "item_mwbvjo2v_ycenw9c",
+      "c": "ex_pavement",
+      "s": 143000,
+      "e": 144500,
+      "v": "AC",
+      "roadWidth": "14.4"
+    },
+    {
+      "_id": "item_mwbvjo2v_gtquv6g",
+      "c": "ex_pavement",
+      "s": 144500,
+      "e": 145500,
+      "v": "AC",
+      "roadWidth": "10"
+    },
+    {
+      "_id": "item_mwbvjo2v_k5bxk60",
+      "c": "ex_pavement",
+      "s": 145500,
+      "e": 146500,
+      "v": "AC",
+      "roadWidth": "13"
+    },
+    {
+      "_id": "item_mwbvjo2v_2xs8se6",
+      "c": "ex_pavement",
+      "s": 146500,
+      "e": 150000,
+      "v": "AC",
+      "roadWidth": "10"
+    },
+    {
+      "_id": "item_mwbwkdz2_ziua4pl",
+      "c": "ex_landmark",
+      "s": 124000,
+      "v": "Hospital",
+      "sym": "symbols/Hospital_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwkdz2_4obp239",
+      "c": "ex_landmark",
+      "s": 124200,
+      "v": "Pagoda",
+      "sym": "symbols/Pagoda_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwkdz2_bzd4fwk",
+      "c": "ex_landmark",
+      "s": 128500,
+      "v": "Pagoda",
+      "sym": "symbols/Pagoda_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwkdz2_0ks8fqc",
+      "c": "ex_landmark",
+      "s": 129200,
+      "v": "Hospital",
+      "sym": "symbols/Hospital_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwkdz2_7199zs1",
+      "c": "ex_landmark",
+      "s": 132400,
+      "v": "School",
+      "sym": "symbols/School_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwkdz2_iuxebmg",
+      "c": "ex_landmark",
+      "s": 135500,
+      "v": "Pagoda",
+      "sym": "symbols/Pagoda_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwkdz2_bsrdl71",
+      "c": "ex_landmark",
+      "s": 136200,
+      "v": "Market",
+      "sym": "symbols/Market_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwkdz2_lr5e5uo",
+      "c": "ex_landmark",
+      "s": 139500,
+      "v": "Hospital",
+      "sym": "symbols/Hospital_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwkdz2_hc941ci",
+      "c": "ex_landmark",
+      "s": 140100,
+      "v": "School",
+      "sym": "symbols/School_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwkdz2_slmxjcq",
+      "c": "ex_landmark",
+      "s": 144900,
+      "v": "Market",
+      "sym": "symbols/Market_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwkdz2_1801lco",
+      "c": "ex_landmark",
+      "s": 149950,
+      "v": "Pagoda",
+      "sym": "symbols/Pagoda_Major.svg",
+      "importance": "Major"
+    },
+    {
+      "_id": "item_mwbwxv4q_xf86xed",
+      "c": "ex_settlement",
+      "s": 122270,
+      "e": 123000,
+      "v": "Sub-Urban"
+    },
+    {
+      "_id": "item_mwbwxv4q_rpxwg5u",
+      "c": "ex_settlement",
+      "s": 123000,
+      "e": 124500,
+      "v": "Rural"
+    },
+    {
+      "_id": "item_mwbwxv4q_mjkztvz",
+      "c": "ex_settlement",
+      "s": 124500,
+      "e": 129000,
+      "v": "Rural"
+    },
+    {
+      "_id": "item_mwbwxv4q_ymrjykn",
+      "c": "ex_settlement",
+      "s": 129000,
+      "e": 144000,
+      "v": "Sub-Urban"
+    },
+    {
+      "_id": "item_mwbwxv4q_u0py3b6",
+      "c": "ex_settlement",
+      "s": 144000,
+      "e": 147000,
+      "v": "Urban"
+    },
+    {
+      "_id": "item_mwbwxv4q_g83t3q9",
+      "c": "ex_settlement",
+      "s": 147000,
+      "e": 149800,
+      "v": "Rural"
+    },
+    {
+      "_id": "item_mwbwyvxq_t36t4io",
+      "c": "ex_settlement",
+      "s": 149800,
+      "e": 150000,
+      "v": "Sub-Urban"
+    },
+    {
+      "_id": "item_mwbwzah3_d871hgt",
+      "c": "ex_terrain",
+      "s": 122270,
+      "e": 150000,
+      "v": "Flat"
+    },
+    {
+      "_id": "item_mwbx0cj9_plb9umo",
+      "c": "info_construction",
+      "s": 122270,
+      "e": 150000,
+      "v": "WB 2018"
+    },
+    {
+      "_id": "item_mwbx0vz9_okblwiq",
+      "c": "info_maintenance",
+      "s": 122270,
+      "e": 150000,
+      "v": "DPWT-TBK"
+    },
+    {
+      "_id": "item_mwbx1xz6_qxexyrs",
+      "c": "ex_structure",
+      "s": 128050,
+      "v": "Bridge",
+      "dim": "210x10"
+    },
+    {
+      "_id": "item_mwbx2gi9_89bz6wr",
+      "c": "ex_structure",
+      "s": 129400,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_9phalrr",
+      "c": "ex_structure",
+      "s": 129800,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_wldxy2f",
+      "c": "ex_structure",
+      "s": 130025,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_okz8nal",
+      "c": "ex_structure",
+      "s": 130530,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_wdjoq9c",
+      "c": "ex_structure",
+      "s": 131175,
+      "v": "Pipe Culvert",
+      "dim": "1Æ120"
+    },
+    {
+      "_id": "item_mwbx2gi9_gjbxn84",
+      "c": "ex_structure",
+      "s": 134200,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_mx16dqh",
+      "c": "ex_structure",
+      "s": 138600,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_c49inv9",
+      "c": "ex_structure",
+      "s": 139900,
+      "v": "Pipe Culvert",
+      "dim": "2Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_qlmr1i1",
+      "c": "ex_structure",
+      "s": 139975,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_gcjgslm",
+      "c": "ex_structure",
+      "s": 140375,
+      "v": "Pipe Culvert",
+      "dim": "1Æ120"
+    },
+    {
+      "_id": "item_mwbx2gi9_hw2th73",
+      "c": "ex_structure",
+      "s": 140615,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_imxobtr",
+      "c": "ex_structure",
+      "s": 141025,
+      "v": "Pipe Culvert",
+      "dim": "2Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_xsabpo1",
+      "c": "ex_structure",
+      "s": 141050,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_eidjhbz",
+      "c": "ex_structure",
+      "s": 141700,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_dhpkkqj",
+      "c": "ex_structure",
+      "s": 144175,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_favcr6v",
+      "c": "ex_structure",
+      "s": 145600,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_1uqu0ec",
+      "c": "ex_structure",
+      "s": 146775,
+      "v": "Pipe Culvert",
+      "dim": "2Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_18lwf48",
+      "c": "ex_structure",
+      "s": 148000,
+      "v": "Pipe Culvert",
+      "dim": "2Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_r1wyz0s",
+      "c": "ex_structure",
+      "s": 148020,
+      "v": "Pipe Culvert",
+      "dim": "2Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_ndww8x7",
+      "c": "ex_structure",
+      "s": 148480,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_rczopoh",
+      "c": "ex_structure",
+      "s": 148775,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx2gi9_4runigu",
+      "c": "ex_structure",
+      "s": 149640,
+      "v": "Pipe Culvert",
+      "dim": "1Æ100"
+    },
+    {
+      "_id": "item_mwbx4cil_iq4aecy",
+      "c": "ex_drain",
+      "s": 130050,
+      "e": 130550,
+      "v": "Pipe Culvert",
+      "dim": "1ø80",
+      "side": "BS"
+    },
+    {
+      "_id": "item_mwbx4cil_tqyw9xh",
+      "c": "ex_drain",
+      "s": 138960,
+      "e": 140680,
+      "v": "Pipe Culvert",
+      "dim": "1ø80",
+      "side": "BS"
+    },
+    {
+      "_id": "item_mwbx4cil_qaoleov",
+      "c": "ex_drain",
+      "s": 141060,
+      "e": 141760,
+      "v": "Pipe Culvert",
+      "dim": "1ø80",
+      "side": "RHS"
+    },
+    {
+      "_id": "item_mwbx4cil_y7gw6mi",
+      "c": "ex_drain",
+      "s": 143340,
+      "e": 144640,
+      "v": "Pipe Culvert",
+      "dim": "1ø80",
+      "side": "BS"
+    },
+    {
+      "_id": "item_mwbx4cil_9yl56gv",
+      "c": "ex_drain",
+      "s": 145280,
+      "e": 147360,
+      "v": "Pipe Culvert",
+      "dim": "1ø80",
+      "side": "RHS"
+    },
+    {
+      "_id": "item_mwbx4cil_wlquaac",
+      "c": "ex_drain",
+      "s": 145280,
+      "e": 148020,
+      "v": "Pipe Culvert",
+      "dim": "1ø80",
+      "side": "LHS"
+    },
+    {
+      "_id": "item_mwbx4cil_rnqza8a",
+      "c": "ex_drain",
+      "s": 148540,
+      "e": 149180,
+      "v": "Pipe Culvert",
+      "dim": "1ø80",
+      "side": "LHS"
+    },
+    {
+      "_id": "item_mwbx4cil_mtbmd24",
+      "c": "ex_drain",
+      "s": 135580,
+      "e": 136960,
+      "v": "U-Ditch",
+      "dim": "1x(50x90)",
+      "side": "LHS"
+    },
+    {
+      "_id": "item_mwbx4cil_i3m9zag",
+      "c": "ex_drain",
+      "s": 135700,
+      "e": 137220,
+      "v": "U-Ditch",
+      "dim": "1x(50x90)",
+      "side": "RHS"
+    },
+    {
+      "_id": "item_mwbx4cil_tdmpdy0",
+      "c": "ex_drain",
+      "s": 141760,
+      "e": 143340,
+      "v": "U-Ditch",
+      "dim": "1x(50x90)",
+      "side": "RHS"
+    },
+    {
+      "_id": "item_mwbx4cil_qfrwqo4",
+      "c": "ex_drain",
+      "s": 142620,
+      "e": 143340,
+      "v": "U-Ditch",
+      "dim": "1x(50x90)",
+      "side": "LHS"
+    },
+    {
+      "_id": "item_mwbx4cil_tq071qe",
+      "c": "ex_drain",
+      "s": 144640,
+      "e": 145280,
+      "v": "U-Ditch",
+      "dim": "1x(50x90)",
+      "side": "BS"
+    },
+    {
+      "_id": "item_mwbxg14i_qf6rdot",
+      "c": "rh_iri",
+      "s": 122270,
+      "e": 123000,
+      "v": "Very Poor"
+    },
+    {
+      "_id": "item_mwbxg14i_z3sac59",
+      "c": "rh_iri",
+      "s": 123000,
+      "e": 124000,
+      "v": "Poor"
+    },
+    {
+      "_id": "item_mwbxg14i_5eaysfq",
+      "c": "rh_iri",
+      "s": 124000,
+      "e": 127000,
+      "v": "Fair"
+    },
+    {
+      "_id": "item_mwbxg14i_jyauq8y",
+      "c": "rh_iri",
+      "s": 127000,
+      "e": 128000,
+      "v": "Good"
+    },
+    {
+      "_id": "item_mwbxg14i_6i2tvk5",
+      "c": "rh_iri",
+      "s": 128000,
+      "e": 130000,
+      "v": "Poor"
+    },
+    {
+      "_id": "item_mwbxg14i_n7cnulz",
+      "c": "rh_iri",
+      "s": 130000,
+      "e": 131000,
+      "v": "Fair"
+    },
+    {
+      "_id": "item_mwbxg14i_armo1mr",
+      "c": "rh_iri",
+      "s": 131000,
+      "e": 132000,
+      "v": "Very Poor"
+    },
+    {
+      "_id": "item_mwbxg14i_k1jdovc",
+      "c": "rh_iri",
+      "s": 132000,
+      "e": 133000,
+      "v": "Poor"
+    },
+    {
+      "_id": "item_mwbxg14i_xvc1t2u",
+      "c": "rh_iri",
+      "s": 133000,
+      "e": 134000,
+      "v": "Good"
+    },
+    {
+      "_id": "item_mwbxg14i_dff48ym",
+      "c": "rh_iri",
+      "s": 134000,
+      "e": 135000,
+      "v": "Poor"
+    },
+    {
+      "_id": "item_mwbxg14i_2o0wnyl",
+      "c": "rh_iri",
+      "s": 135000,
+      "e": 137000,
+      "v": "Good"
+    },
+    {
+      "_id": "item_mwbxg14i_oe09lp0",
+      "c": "rh_iri",
+      "s": 137000,
+      "e": 139000,
+      "v": "Fair"
+    },
+    {
+      "_id": "item_mwbxg14i_1xwz3sn",
+      "c": "rh_iri",
+      "s": 139000,
+      "e": 144000,
+      "v": "Good"
+    },
+    {
+      "_id": "item_mwbxg14i_cvmw1c3",
+      "c": "rh_iri",
+      "s": 144000,
+      "e": 146000,
+      "v": "Poor"
+    },
+    {
+      "_id": "item_mwbxg14i_qld03vp",
+      "c": "rh_iri",
+      "s": 146000,
+      "e": 147000,
+      "v": "Good"
+    },
+    {
+      "_id": "item_mwbxg14i_7ekctml",
+      "c": "rh_iri",
+      "s": 147000,
+      "e": 148000,
+      "v": "Poor"
+    },
+    {
+      "_id": "item_mwbxg14i_zum4jno",
+      "c": "rh_iri",
+      "s": 148000,
+      "e": 149000,
+      "v": "Good"
+    },
+    {
+      "_id": "item_mwbxg14i_wx2d7rj",
+      "c": "rh_iri",
+      "s": 149000,
+      "e": 150000,
+      "v": "Poor"
+    },
+    {
+      "_id": "item_mwbyvqy3_2970whn",
+      "c": "rh_fwd",
+      "s": 124000,
+      "e": 129800,
+      "v": "400 MPa",
+      "dim": "420 MPa"
+    },
+    {
+      "_id": "item_mwbyvqy3_lo2jg24",
+      "c": "rh_fwd",
+      "s": 129800,
+      "e": 136000,
+      "v": "320 MPa",
+      "dim": "420 MPa"
+    },
+    {
+      "_id": "item_mwbyvqy3_i017ael",
+      "c": "rh_fwd",
+      "s": 136000,
+      "e": 142100,
+      "v": "510 MPa",
+      "dim": "420 MPa"
+    },
+    {
+      "_id": "item_mwbyvqy3_x9nf6y9",
+      "c": "rh_fwd",
+      "s": 142100,
+      "e": 144300,
+      "v": "350 MPa",
+      "dim": "420 MPa"
+    },
+    {
+      "_id": "item_mwbyvqy3_ddcg9f9",
+      "c": "rh_fwd",
+      "s": 144300,
+      "e": 147400,
+      "v": "550 MPa",
+      "dim": "420 MPa"
+    },
+    {
+      "_id": "item_mwbyvqy3_ok2alje",
+      "c": "rh_fwd",
+      "s": 147400,
+      "e": 150000,
+      "v": "320 MPa",
+      "dim": "420 MPa"
+    }
+  ],
+  "custom": [],
+  "settings": {
+    "stationLabels": {
+      "ex_landmark": false,
+      "ex_structure": false,
+      "ex_drain": true,
+      "ds_structure": false,
+      "ds_drain": false
+    },
+    "valueLabels": {
+      "ex_landmark": false,
+      "ex_structure": false,
+      "ex_drain": false,
+      "ds_structure": false,
+      "ds_drain": false
+    },
+    "labelOffsets": {},
+    "theme": "system"
+  }
+}

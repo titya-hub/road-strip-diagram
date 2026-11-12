@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 51.913 52.004">
+  <defs>
+    <style>
+      .cls-1{fill:none;stroke:#000000;stroke-width:2;stroke-miterlimit:10}
+      .cls-2{fill:#ffffff;stroke:#000000;stroke-width:2;stroke-miterlimit:10}
+      .cls-3{fill:#ffffff;stroke:#000000;stroke-miterlimit:10}
+      .cls-4{fill:none;stroke:#000000;stroke-miterlimit:10}
+      .cls-5{fill:#00908c;stroke:#000000;stroke-width:2;stroke-miterlimit:10}
+    </style>
+  </defs>
+  <title>Asset 23</title>
+  <g id="Asset_23" data-name="Asset 23">
+    <path d="M19.663 1.004 L32.163 1.004 Z" class="cls-1"/>
+    <path d="M32.163 1.004" class="cls-2"/>
+    <path d="M36.85 1.004" class="cls-2"/>
+    <path d="M41.538 5.691" class="cls-2"/>
+    <path d="M50.913 19.75 L36.663 19.75 C35.286 17.717 34.262 16.693 32.163 15.251 L32.163 1.004" class="cls-1"/>
+    <path d="M32.163 51.004 L32.163 36.754 C34.196 35.377 35.219 34.354 36.662 32.254 L50.908 32.254" class="cls-1"/>
+    <path d="M1 32.258 L15.25 32.258 C16.627 34.291 17.65 35.315 19.75 36.757 L19.75 51.004" class="cls-1"/>
+    <path d="M19.75 1 L19.75 15.25 C17.717 16.627 16.693 17.65 15.251 19.75 L1.004 19.75" class="cls-1"/>
+    <path d="M50.913 19.75 L50.913 32.254" class="cls-1"/>
+    <path d="M32.163 50.635 L19.663 50.635" class="cls-1"/>
+    <path d="M1.284 32.254 L1.284 19.75" class="cls-1"/>
+    <g>
+      <path d="M25.807 1.004 L25.807 13.687" class="cls-3"/>
+      <path d="M51.018 26.048 L38.363 26.048" class="cls-4"/>
+      <path d="M0.807 26.004 L13.669 26.004" class="cls-4"/>
+      <path d="M25.807 51.004 L25.807 37.961" class="cls-4"/>
+      <path d="M19.644 26.048 C19.644 22.62 22.423 19.842 25.851 19.842 C29.278 19.842 32.057 22.62 32.057 26.048 C32.057 29.476 29.278 32.254 25.851 32.254 C22.423 32.254 19.644 29.476 19.644 26.048 Z" class="cls-5"/>
+    </g>
+  </g>
+</svg>
